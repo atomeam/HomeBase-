@@ -1,6 +1,6 @@
 {
-  "name": "HomeBase Button App",
-  "description": "A simple one-button app with a status footer tracking clicks.",
+  "name": "HomeBase",
+  "description": "Operator surface for Alpha — the self-improving loop (observe → evaluate → propose → validate → apply → reflect) wrapped in Curator default-deny.",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }

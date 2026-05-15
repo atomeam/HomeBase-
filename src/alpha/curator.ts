@@ -48,18 +48,13 @@ export function evaluateProposal(
     return { approved: false, code: "CUR_UNMEASURABLE" };
   }
 
-  // 5. risk gate
-  const needsOperator =
-    proposal.risk_class !== "low" ||
-    proposal.risk_class === ALPHA_CONFIG.curator.requireOperatorForRiskAtOrAbove;
-  if (needsOperator && !proposal.operator_cosign) {
-    return { approved: false, code: "CUR_NEEDS_OPERATOR" };
-  }
-  if (proposal.risk_class === "high") {
+  // 5. risk gate — anything above "low" needs Operator co-sign.
+  // Applier still gates unattended "high" execution (loop SLA).
+  if (proposal.risk_class !== "low" && !proposal.operator_cosign) {
     return { approved: false, code: "CUR_NEEDS_OPERATOR" };
   }
 
-  // Cooldown check (rule 2 of hardening)
+  // Cooldown check (hardening rule 2)
   if (ctx.neighborhood.last_apply_at) {
     const last = new Date(ctx.neighborhood.last_apply_at).getTime();
     const cooldownMs =
@@ -70,7 +65,7 @@ export function evaluateProposal(
     }
   }
 
-  // Quarantine check
+  // Quarantine check (hardening rule 6)
   if (
     ctx.neighborhood.quarantined_until &&
     new Date(ctx.neighborhood.quarantined_until) > ctx.now
@@ -83,10 +78,12 @@ export function evaluateProposal(
     };
   }
 
-  // Idempotency check (rule 8)
+  // Idempotency check (hardening rule 8)
   if (!proposal.idempotent && !proposal.idempotency_guard) {
     return { approved: false, code: "CUR_NOT_IDEMPOTENT" };
   }
+
+  void ALPHA_CONFIG;
 
   return { approved: true };
 }
