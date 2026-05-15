@@ -480,7 +480,7 @@
     });
     intent.addEventListener('keydown', function(e){
       if (e.key === 'Enter') { e.preventDefault(); press(); }
-      else if (e.key === 'Escape') { intent.value = ''; intent.blur(); }
+      else if (e.key === 'Escape') { intent.value = ''; intent.blur(); showBanner('info', 'Intent cleared', 1000); }
     });
     document.addEventListener('keydown', function(e){
       if (e.code !== 'Space' && e.key !== ' ') return;
