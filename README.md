@@ -275,3 +275,59 @@ Get single entry:
 ```bash
 GET /api/lore/entry/lore-001
 ```
+
+---
+
+## Kraken Execution Engine (v0)
+
+Default-deny, require operator confirm, rate limited.
+
+### GET /api/kraken/actions
+
+Returns allowlist with schemas.
+
+### POST /api/kraken/execute
+
+**Headers required:**
+- `X-Operator-Confirm: yes` (else 403)
+- `X-Trace-Id: <uuid>` (optional)
+
+**Body:**
+```json
+{
+  "action": "echo",
+  "params": { "message": "hello" }
+}
+```
+
+**Response:**
+```json
+{
+  "ok": true,
+  "traceId": "trace_...",
+  "action": "echo",
+  "decision": "executed",
+  "result": { "echoed": "hello", "at": "..." },
+  "durationMs": 5
+}
+```
+
+### Actions (v0)
+
+| Action | Description | Params |
+|--------|-------------|--------|
+| `echo` | Diagnostic echo | `message: string (1-200)` |
+| `incident.note` | Append note to log | `note: string (1-500), severity: info\|warn` |
+
+### Guardrails
+
+- Default-deny
+- Operator confirm required
+- Rate limit: 10/min
+- Secret scanner blocks tokens
+- 5s timeout per action
+
+### Test Harness
+```bash
+node kraken-test.js
+```
