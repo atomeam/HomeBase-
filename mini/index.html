@@ -9,252 +9,152 @@
 <link rel="manifest" href="manifest.webmanifest" />
 <meta name="theme-color" content="#0a0a0a" />
 <style>
-  :root { color-scheme: dark;
-    --ok: #22c55e; --pending: #eab308; --error: #ef4444; --idle: #52525b;
-    --accent: #60a5fa;
-  }
+  :root { color-scheme: dark; --ok:#22c55e; --pending:#eab308; --error:#ef4444; --idle:#52525b; --accent:#60a5fa; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
-  body {
-    background: #050505; color: #fff;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    display: flex; flex-direction: column; overflow: hidden; user-select: none;
-  }
-  .bg { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
-  .bg .blob1 { position: absolute; top: -10%; left: -10%; width: 500px; height: 500px;
-    background: rgba(30,58,138,0.10); border-radius: 50%; filter: blur(120px); }
-  .bg .blob2 { position: absolute; bottom: -10%; right: -10%; width: 500px; height: 500px;
-    background: rgba(39,39,42,0.10); border-radius: 50%; filter: blur(120px); }
-  .bg .grid { position: absolute; inset: 0; opacity: 0.03;
-    background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 32px 32px; }
-  main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    position: relative; z-index: 10; padding: 0 2rem; }
-  .header { margin-bottom: 2rem; text-align: center; }
-  .header p { font-size: 10px; text-transform: uppercase; letter-spacing: 0.6em; color: #71717a;
-    font-weight: 500; margin-bottom: 0.75rem; }
-  .header .line { height: 1px; width: 192px; margin: 0 auto;
-    background: linear-gradient(to right, transparent, #3f3f46, transparent); }
-  .intent-wrap { margin-bottom: 1.5rem; width: 22rem; max-width: 90vw; user-select: text; }
-  .intent-wrap input {
-    appearance: none; width: 100%;
-    background: transparent; color: #d4d4d8;
-    border: none; border-bottom: 1px solid #27272a;
-    padding: 0.5rem 0.25rem; text-align: center;
-    font-family: Georgia, serif; font-style: italic; font-size: 13px;
-    letter-spacing: 0.05em; outline: none;
-    transition: border-color 0.2s, color 0.2s;
-  }
-  .intent-wrap input::placeholder { color: #3f3f46; }
-  .intent-wrap input:focus { border-bottom-color: #71717a; color: #f4f4f5; }
-  .intent-wrap .hint { display: block; margin-top: 0.4rem; text-align: center;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: #3f3f46; }
-  .btn-wrap { position: relative; }
-  .btn-glow { position: absolute; inset: 0; background: rgba(255,255,255,0.05);
-    border-radius: 1rem; filter: blur(16px); transition: background 0.5s; }
-  .btn-wrap:hover .btn-glow { background: rgba(255,255,255,0.10); }
-  button.homebase { position: relative; width: 16rem; height: 6rem;
-    background: #18181b; border: 1px solid #3f3f46; border-radius: 0.75rem;
-    color: #f4f4f5; font-size: 1.5rem; font-weight: 700;
-    letter-spacing: 0.25em; text-transform: uppercase; cursor: pointer;
-    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-    transition: transform 0.15s, color 0.2s; overflow: hidden; }
-  button.homebase:hover { color: #fff; transform: scale(1.02); }
-  button.homebase:active { transform: scale(0.95); }
-  button.homebase .bevel { position: absolute; inset: 1px;
-    border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; pointer-events: none; }
-  button.homebase .pip { position: absolute; width: 4px; height: 4px; background: #3f3f46; }
-  button.homebase .pip.tl { top: 8px; left: 8px; }
-  button.homebase .pip.tr { top: 8px; right: 8px; }
-  button.homebase .pip.bl { bottom: 8px; left: 8px; }
-  button.homebase .pip.br { bottom: 8px; right: 8px; }
-  button.homebase.idle { animation: idlePulse 2s ease-in-out infinite; }
-  @keyframes idlePulse { 0%,100%{opacity:1;} 50%{opacity:0.85;} }
-  .descriptor { margin-top: 2rem; text-align: center; font-style: italic;
-    font-family: Georgia, serif; font-size: 11px; color: #52525b; letter-spacing: 0.15em; }
-  .propose-link { margin-top: 1.25rem; background: transparent; border: none; cursor: pointer;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px;
-    letter-spacing: 0.25em; text-transform: uppercase; color: #52525b;
-    padding: 4px 10px; border-radius: 4px; transition: color 0.2s, background 0.2s; }
-  .propose-link:hover { color: var(--accent); background: rgba(96,165,250,0.08); }
-  .propose-link:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  .banner { position: fixed; top: 0; left: 0; right: 0; z-index: 50;
-    padding: 14px 24px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 13px; line-height: 1.4; letter-spacing: 0.05em;
-    transform: translateY(-110%); transition: transform 0.3s ease;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5); cursor: pointer; }
-  .banner.show { transform: translateY(0); }
-  .banner.error   { background: #7f1d1d; color: #fecaca; border-bottom: 2px solid #ef4444; }
-  .banner.warn    { background: #78350f; color: #fed7aa; border-bottom: 2px solid #f59e0b; }
-  .banner.success { background: #14532d; color: #bbf7d0; border-bottom: 2px solid #22c55e; }
-  .banner b { font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-right: 8px; }
-  .banner .dismiss { float: right; opacity: 0.6; font-weight: 700; }
-  .banner a { color: inherit; text-decoration: underline; }
-
-  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100;
-    display: flex; align-items: center; justify-content: center; padding: 1rem;
-    overflow-y: auto; }
-  .modal-bg[hidden] { display: none; }
-  .modal { background: #0a0a0a; border: 1px solid #27272a; border-radius: 0.75rem;
-    padding: 1.75rem; max-width: 32rem; width: 100%;
-    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8); user-select: text;
-    max-height: 95vh; overflow-y: auto; }
-  .modal h2 { font-size: 13px; letter-spacing: 0.3em; text-transform: uppercase; color: #71717a;
-    font-weight: 600; margin-bottom: 1.25rem; font-family: ui-monospace, monospace; }
-  .modal label { display: block; margin-bottom: 1.1rem; }
-  .modal .label-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.4rem; }
-  .modal .label-row span { font-size: 11px; color: #a1a1aa; letter-spacing: 0.1em; text-transform: uppercase; font-family: ui-monospace, monospace; }
-  .modal .label-row a { font-size: 10px; color: var(--accent); text-decoration: none; letter-spacing: 0.1em; text-transform: uppercase; font-family: ui-monospace, monospace; }
-  .modal .label-row a:hover { text-decoration: underline; }
-  .modal input { width: 100%; background: #050505; color: #f4f4f5; border: 1px solid #27272a;
-    border-radius: 0.375rem; padding: 0.5rem 0.75rem;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px;
-    outline: none; transition: border-color 0.2s; }
-  .modal input:focus { border-color: var(--accent); }
-  .modal .hint { display: block; margin-top: 0.35rem; font-size: 10px; color: #52525b;
-    letter-spacing: 0.05em; font-family: ui-monospace, monospace; }
-  .modal .hint.ok { color: var(--ok); }
-  .modal .hint.bad { color: var(--error); }
-  .modal .section-note { font-size: 10px; color: #71717a; font-family: ui-monospace, monospace;
-    letter-spacing: 0.05em; margin: 0.5rem 0 0.75rem; padding-left: 0.5rem; border-left: 2px solid #27272a; }
-  .modal-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.5rem; }
-  .modal-actions button {
-    background: transparent; border: 1px solid #27272a; color: #a1a1aa;
-    border-radius: 999px; padding: 0.4rem 1rem;
-    font-family: ui-monospace, monospace; font-size: 11px; letter-spacing: 0.1em;
-    text-transform: uppercase; cursor: pointer; transition: all 0.15s;
-  }
-  .modal-actions button:hover { color: #f4f4f5; border-color: #3f3f46; }
-  .modal-actions button.primary { color: var(--accent); border-color: var(--accent); }
-  .modal-actions button.primary:hover { background: rgba(96,165,250,0.12); }
-  .modal-actions button.danger { color: #a1a1aa; }
-  .modal-actions button.danger:hover { color: var(--error); border-color: var(--error); }
-  .modal-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  .prop-summary { font-family: Georgia, serif; font-size: 18px; line-height: 1.4; color: #f4f4f5;
-    margin: 0.5rem 0 1rem; padding: 1rem; background: #050505; border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; }
-  .prop-meta { font-family: ui-monospace, monospace; font-size: 10px; letter-spacing: 0.1em;
-    text-transform: uppercase; color: #52525b; margin-bottom: 1rem; }
-  .prop-meta b { color: #a1a1aa; }
-  .prop-patches { background: #050505; border: 1px solid #18181b; border-radius: 6px;
-    padding: 0.75rem; max-height: 18rem; overflow-y: auto;
-    font-family: ui-monospace, monospace; font-size: 10px; color: #71717a; }
-  .prop-patches .patch { padding: 0.5rem 0; border-bottom: 1px dashed #18181b; }
-  .prop-patches .patch:last-child { border-bottom: 0; }
-  .prop-patches .line { white-space: pre-wrap; word-break: break-all; }
-  .prop-patches .line.del { color: #fca5a5; }
-  .prop-patches .line.add { color: #86efac; }
-
-  footer { height: 3rem; background: #0a0a0a; border-top: 1px solid #27272a;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 2.5rem; position: relative; z-index: 20; }
-  .left { display: flex; align-items: center; gap: 0.75rem; }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--idle);
-    box-shadow: 0 0 8px rgba(82,82,91,0.4); transition: background 0.3s, box-shadow 0.3s; cursor: help; }
-  .dot.ok      { background: var(--ok);      box-shadow: 0 0 10px rgba(34,197,94,0.6);  animation: pulse 2s infinite; }
-  .dot.pending { background: var(--pending); box-shadow: 0 0 10px rgba(234,179,8,0.6);  animation: pulse 0.8s infinite; }
-  .dot.error   { background: var(--error);   box-shadow: 0 0 10px rgba(239,68,68,0.7); }
-  @keyframes pulse { 50% { opacity: 0.5; } }
-  .label-text { font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 11px; font-weight: 600; color: #a1a1aa; letter-spacing: 0.1em;
-    text-transform: uppercase; white-space: nowrap; }
-  .label-text .dim { color: #71717a; font-weight: 400; }
-  .right { display: flex; align-items: center; gap: 1rem; }
-  .divider { height: 1rem; width: 1px; background: #27272a; }
-  #counter { font-weight: 700; display: inline-block; min-width: 2ch;
-    transition: transform 0.25s, color 0.25s; }
-  #counter.bump { transform: scale(1.5); color: #86efac; }
-  #clicksLabel { cursor: pointer; }
-  .gear { background: transparent; border: none; color: #52525b; font-size: 14px;
-    cursor: pointer; padding: 4px 6px; line-height: 1; transition: color 0.2s; }
-  .gear:hover { color: #a1a1aa; }
-  .build-stamp { position: fixed; bottom: 4rem; right: 0.75rem; font-family: ui-monospace, monospace;
-    font-size: 9px; color: #27272a; letter-spacing: 0.1em; pointer-events: none; z-index: 5; }
+  body { background:#050505; color:#fff; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; display:flex; flex-direction:column; overflow:hidden; user-select:none; }
+  .bg { position:fixed; inset:0; pointer-events:none; overflow:hidden; }
+  .bg .blob1 { position:absolute; top:-10%; left:-10%; width:500px; height:500px; background:rgba(30,58,138,0.10); border-radius:50%; filter:blur(120px); }
+  .bg .blob2 { position:absolute; bottom:-10%; right:-10%; width:500px; height:500px; background:rgba(39,39,42,0.10); border-radius:50%; filter:blur(120px); }
+  .bg .grid { position:absolute; inset:0; opacity:0.03; background-image:radial-gradient(#fff 1px,transparent 1px); background-size:32px 32px; }
+  main { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; z-index:10; padding:0 2rem; }
+  .header { margin-bottom:2rem; text-align:center; }
+  .header p { font-size:10px; text-transform:uppercase; letter-spacing:0.6em; color:#71717a; font-weight:500; margin-bottom:0.75rem; }
+  .header .line { height:1px; width:192px; margin:0 auto; background:linear-gradient(to right,transparent,#3f3f46,transparent); }
+  .intent-wrap { margin-bottom:1.5rem; width:22rem; max-width:90vw; user-select:text; }
+  .intent-wrap input { appearance:none; width:100%; background:transparent; color:#d4d4d8; border:none; border-bottom:1px solid #27272a; padding:0.5rem 0.25rem; text-align:center; font-family:Georgia,serif; font-style:italic; font-size:13px; letter-spacing:0.05em; outline:none; transition:border-color 0.2s,color 0.2s; }
+  .intent-wrap input::placeholder { color:#3f3f46; }
+  .intent-wrap input:focus { border-bottom-color:#71717a; color:#f4f4f5; }
+  .intent-wrap .hint { display:block; margin-top:0.4rem; text-align:center; font-family:ui-monospace,monospace; font-size:9px; letter-spacing:0.3em; text-transform:uppercase; color:#3f3f46; }
+  .btn-wrap { position:relative; }
+  .btn-glow { position:absolute; inset:0; background:rgba(255,255,255,0.05); border-radius:1rem; filter:blur(16px); transition:background 0.5s; }
+  .btn-wrap:hover .btn-glow { background:rgba(255,255,255,0.10); }
+  button.homebase { position:relative; width:16rem; height:6rem; background:#18181b; border:1px solid #3f3f46; border-radius:0.75rem; color:#f4f4f5; font-size:1.5rem; font-weight:700; letter-spacing:0.25em; text-transform:uppercase; cursor:pointer; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); transition:transform 0.15s,color 0.2s; overflow:hidden; }
+  button.homebase:hover { color:#fff; transform:scale(1.02); }
+  button.homebase:active { transform:scale(0.95); }
+  button.homebase .bevel { position:absolute; inset:1px; border:1px solid rgba(255,255,255,0.05); border-radius:10px; pointer-events:none; }
+  button.homebase .pip { position:absolute; width:4px; height:4px; background:#3f3f46; }
+  button.homebase .pip.tl{top:8px;left:8px} .homebase .pip.tr{top:8px;right:8px} .homebase .pip.bl{bottom:8px;left:8px} .homebase .pip.br{bottom:8px;right:8px}
+  button.homebase.idle { animation:idlePulse 2s ease-in-out infinite; }
+  @keyframes idlePulse { 0%,100%{opacity:1} 50%{opacity:0.85} }
+  .descriptor { margin-top:2rem; text-align:center; font-style:italic; font-family:Georgia,serif; font-size:11px; color:#52525b; letter-spacing:0.15em; }
+  .propose-link { margin-top:1.25rem; background:transparent; border:none; cursor:pointer; font-family:ui-monospace,monospace; font-size:11px; letter-spacing:0.25em; text-transform:uppercase; color:#52525b; padding:4px 10px; border-radius:4px; transition:color 0.2s,background 0.2s; }
+  .propose-link:hover { color:var(--accent); background:rgba(96,165,250,0.08); }
+  .propose-link:disabled { opacity:0.4; cursor:not-allowed; }
+  .banner { position:fixed; top:0; left:0; right:0; z-index:50; padding:14px 24px; font-family:ui-monospace,monospace; font-size:13px; line-height:1.4; letter-spacing:0.05em; transform:translateY(-110%); transition:transform 0.3s ease; box-shadow:0 4px 20px rgba(0,0,0,0.5); cursor:pointer; }
+  .banner.show { transform:translateY(0); }
+  .banner.error { background:#7f1d1d; color:#fecaca; border-bottom:2px solid #ef4444; }
+  .banner.warn { background:#78350f; color:#fed7aa; border-bottom:2px solid #f59e0b; }
+  .banner.success { background:#14532d; color:#bbf7d0; border-bottom:2px solid #22c55e; }
+  .banner b { font-weight:700; letter-spacing:0.1em; text-transform:uppercase; margin-right:8px; }
+  .banner .dismiss { float:right; opacity:0.6; font-weight:700; }
+  .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:100; display:flex; align-items:center; justify-content:center; padding:1rem; overflow-y:auto; }
+  .modal-bg[hidden] { display:none; }
+  .modal { background:#0a0a0a; border:1px solid #27272a; border-radius:0.75rem; padding:1.75rem; max-width:34rem; width:100%; box-shadow:0 25px 50px -12px rgba(0,0,0,0.8); user-select:text; max-height:95vh; overflow-y:auto; }
+  .modal h2 { font-size:13px; letter-spacing:0.3em; text-transform:uppercase; color:#71717a; font-weight:600; margin-bottom:1.25rem; font-family:ui-monospace,monospace; }
+  .modal label { display:block; margin-bottom:1rem; }
+  .modal .label-row { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:0.4rem; }
+  .modal .label-row span { font-size:11px; color:#a1a1aa; letter-spacing:0.1em; text-transform:uppercase; font-family:ui-monospace,monospace; }
+  .modal .label-row a { font-size:10px; color:var(--accent); text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; font-family:ui-monospace,monospace; }
+  .modal .label-row a:hover { text-decoration:underline; }
+  .modal input { width:100%; background:#050505; color:#f4f4f5; border:1px solid #27272a; border-radius:0.375rem; padding:0.5rem 0.75rem; font-family:ui-monospace,monospace; font-size:12px; outline:none; transition:border-color 0.2s; }
+  .modal input:focus { border-color:var(--accent); }
+  .modal .hint { display:block; margin-top:0.35rem; font-size:10px; color:#52525b; letter-spacing:0.05em; font-family:ui-monospace,monospace; }
+  .modal .hint.ok { color:var(--ok); }
+  .modal .hint.bad { color:var(--error); }
+  .modal .section-note { font-size:10px; color:#71717a; font-family:ui-monospace,monospace; letter-spacing:0.05em; margin:0.5rem 0 0.75rem; padding-left:0.5rem; border-left:2px solid #27272a; }
+  .modal .nokey-note { font-size:10px; color:#86efac; font-family:ui-monospace,monospace; letter-spacing:0.05em; margin:0 0 1rem; padding:8px 10px; background:rgba(34,197,94,0.08); border-left:2px solid var(--ok); border-radius:0 4px 4px 0; }
+  .modal-actions { display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1.5rem; }
+  .modal-actions button { background:transparent; border:1px solid #27272a; color:#a1a1aa; border-radius:999px; padding:0.4rem 1rem; font-family:ui-monospace,monospace; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; transition:all 0.15s; }
+  .modal-actions button:hover { color:#f4f4f5; border-color:#3f3f46; }
+  .modal-actions button.primary { color:var(--accent); border-color:var(--accent); }
+  .modal-actions button.primary:hover { background:rgba(96,165,250,0.12); }
+  .modal-actions button.danger:hover { color:var(--error); border-color:var(--error); }
+  .modal-actions button:disabled { opacity:0.4; cursor:not-allowed; }
+  .prop-summary { font-family:Georgia,serif; font-size:16px; line-height:1.45; color:#f4f4f5; margin:0.5rem 0 1rem; padding:1rem; background:#050505; border-left:3px solid var(--accent); border-radius:0 6px 6px 0; white-space:pre-wrap; }
+  .prop-meta { font-family:ui-monospace,monospace; font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:#52525b; margin-bottom:0.75rem; }
+  .prop-meta b { color:#a1a1aa; }
+  .prop-validate { font-family:ui-monospace,monospace; font-size:10px; padding:6px 10px; margin-bottom:0.75rem; border-radius:4px; letter-spacing:0.05em; line-height:1.5; }
+  .prop-validate.ok { background:rgba(34,197,94,0.1); color:#86efac; border:1px solid rgba(34,197,94,0.3); }
+  .prop-validate.bad { background:rgba(239,68,68,0.1); color:#fca5a5; border:1px solid rgba(239,68,68,0.3); }
+  .prop-patches { background:#050505; border:1px solid #18181b; border-radius:6px; padding:0.75rem; max-height:16rem; overflow-y:auto; font-family:ui-monospace,monospace; font-size:10px; color:#71717a; }
+  .prop-patches .patch { padding:0.5rem 0; border-bottom:1px dashed #18181b; }
+  .prop-patches .patch:last-child { border-bottom:0; }
+  .prop-patches .line { white-space:pre-wrap; word-break:break-all; }
+  .prop-patches .line.del { color:#fca5a5; }
+  .prop-patches .line.add { color:#86efac; }
+  footer { height:3rem; background:#0a0a0a; border-top:1px solid #27272a; display:flex; align-items:center; justify-content:space-between; padding:0 2.5rem; position:relative; z-index:20; }
+  .left { display:flex; align-items:center; gap:0.75rem; }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--idle); box-shadow:0 0 8px rgba(82,82,91,0.4); transition:background 0.3s,box-shadow 0.3s; cursor:help; }
+  .dot.ok { background:var(--ok); box-shadow:0 0 10px rgba(34,197,94,0.6); animation:pulse 2s infinite; }
+  .dot.pending { background:var(--pending); box-shadow:0 0 10px rgba(234,179,8,0.6); animation:pulse 0.8s infinite; }
+  .dot.error { background:var(--error); box-shadow:0 0 10px rgba(239,68,68,0.7); }
+  @keyframes pulse { 50% { opacity:0.5; } }
+  .label-text { font-family:ui-monospace,monospace; font-size:11px; font-weight:600; color:#a1a1aa; letter-spacing:0.1em; text-transform:uppercase; white-space:nowrap; }
+  .label-text .dim { color:#71717a; font-weight:400; }
+  .right { display:flex; align-items:center; gap:1rem; }
+  .divider { height:1rem; width:1px; background:#27272a; }
+  #counter { font-weight:700; display:inline-block; min-width:2ch; transition:transform 0.25s,color 0.25s; }
+  #counter.bump { transform:scale(1.5); color:#86efac; }
+  #clicksLabel { cursor:pointer; }
+  .gear { background:transparent; border:none; color:#52525b; font-size:14px; cursor:pointer; padding:4px 6px; line-height:1; transition:color 0.2s; }
+  .gear:hover { color:#a1a1aa; }
+  .build-stamp { position:fixed; bottom:4rem; right:0.75rem; font-family:ui-monospace,monospace; font-size:9px; color:#27272a; letter-spacing:0.1em; pointer-events:none; z-index:5; }
 </style>
 </head>
 <body>
   <div class="banner" id="banner"><span class="dismiss">×</span><b id="bannerKind">info</b><span id="bannerText"></span></div>
   <div class="bg"><div class="blob1"></div><div class="blob2"></div><div class="grid"></div></div>
   <main>
-    <div class="header">
-      <p>Primary Command Interface</p>
-      <div class="line"></div>
-    </div>
+    <div class="header"><p>Primary Command Interface</p><div class="line"></div></div>
     <div class="intent-wrap">
       <input id="intent" type="text" maxlength="240" autocomplete="off" spellcheck="true" class="intent-focused"
              placeholder="why are you summoning me?" aria-label="intent" />
+      <input id="intent" type="text" maxlength="240" autocomplete="off" spellcheck="true" placeholder="why are you summoning me?" aria-label="intent" />
       <span class="hint">optional · enter or click to send</span>
     </div>
-    <div class="btn-wrap">
-      <div class="btn-glow"></div>
+    <div class="btn-wrap"><div class="btn-glow"></div>
       <button class="homebase" id="homebase-button" aria-label="Homebase">
-        <span class="bevel"></span>
-        Homebase
-        <span class="pip tl"></span><span class="pip tr"></span>
-        <span class="pip bl"></span><span class="pip br"></span>
+        <span class="bevel"></span>Homebase
+        <span class="pip tl"></span><span class="pip tr"></span><span class="pip bl"></span><span class="pip br"></span>
       </button>
     </div>
     <div class="descriptor">Bridge Connection: Active</div>
-    <button class="propose-link" id="proposeBtn" type="button" title="Have the LLM propose a new capability based on intent log + recent commits">✨ propose change</button>
+    <div class="quick-replay-wrap"><button class="quick-replay" id="replayBtn" type="button" title="Replay the last logged intent note">🔄 replay last</button></div>
+    <button class="propose-link" id="proposeBtn" type="button" title="LLM proposes a working capability based on intent log + recent commits">✨ propose change</button>
   </main>
   <footer>
-    <div class="left">
-      <div class="dot" id="dot" title="No token. Click gear to set up."></div>
-      <span class="label-text">Homebase <span class="dim" id="statusMsg">offline</span></span>
-    </div>
-    <div class="right">
-      <button class="gear" id="gear" title="Settings" type="button">⚙</button>
+    <div class="left"><div class="dot" id="dot" title="No token. Click gear to set up."></div>
+      <span class="label-text">Homebase <span class="dim" id="statusMsg">offline</span></span></div>
+    <div class="right"><button class="gear" id="gear" title="Settings" type="button">⚙</button>
       <div class="divider"></div>
-      <span class="label-text" id="clicksLabel" title="Double-click to reset local count">clicks: <span id="counter">0</span></span>
-    </div>
+      <span class="label-text" id="clicksLabel" title="Double-click to reset local count">clicks: <span id="counter">0</span></span></div>
   </footer>
-  <div class="build-stamp">build quad-llm-v9</div>
+  <div class="build-stamp">build v10</div>
 
   <div class="modal-bg" id="modalBg" hidden>
     <div class="modal">
       <h2>Settings</h2>
-      <label>
-        <div class="label-row">
-          <span>GitHub Personal Access Token</span>
-          <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">create token</a>
-        </div>
+      <label><div class="label-row"><span>GitHub Personal Access Token</span><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">create token</a></div>
         <input type="password" id="gh-input" placeholder="github_pat_..." autocomplete="off" />
-        <span class="hint" id="gh-hint">Fine-grained PAT · atomeam/HomeBase- · Contents + Pull requests: Read &amp; write</span>
-      </label>
-      <div class="section-note">For ✨ propose change. Add any one or more. Tried in this order: Mistral → Gemini → OpenRouter → Groq.</div>
-      <label>
-        <div class="label-row">
-          <span>Mistral API Key (free)</span>
-          <a href="https://console.mistral.ai/api-keys" target="_blank" rel="noopener">create key</a>
-        </div>
+        <span class="hint" id="gh-hint">Fine-grained PAT · atomeam/HomeBase- · Contents + Pull requests: Read &amp; write</span></label>
+      <div class="nokey-note">✨ propose change works <b>without any LLM key</b> via Pollinations (no auth, always free). Add keys below only for better quality.</div>
+      <div class="section-note">Tried in this order: Cohere → Mistral → Gemini → OpenRouter → Pollinations → Groq.</div>
+      <label><div class="label-row"><span>Cohere API Key (free)</span><a href="https://dashboard.cohere.com/api-keys" target="_blank" rel="noopener">create key</a></div>
+        <input type="password" id="co-input" placeholder="cohere key" autocomplete="off" />
+        <span class="hint" id="co-hint">dashboard.cohere.com · no card · Command R+ · 128K context · 1000/month</span></label>
+      <label><div class="label-row"><span>Mistral API Key (free)</span><a href="https://console.mistral.ai/api-keys" target="_blank" rel="noopener">create key</a></div>
         <input type="password" id="mst-input" placeholder="mistral key" autocomplete="off" />
-        <span class="hint" id="mst-hint">console.mistral.ai · phone verify, no card · 131K context · 1B tokens/month</span>
-      </label>
-      <label>
-        <div class="label-row">
-          <span>Gemini API Key (free)</span>
-          <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">create key</a>
-        </div>
+        <span class="hint" id="mst-hint">console.mistral.ai · phone verify, no card · 131K context · 1B tokens/month</span></label>
+      <label><div class="label-row"><span>Gemini API Key (free)</span><a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">create key</a></div>
         <input type="password" id="gem-input" placeholder="AIza..." autocomplete="off" />
-        <span class="hint" id="gem-hint">Google AI Studio · no credit card · 1M context · 1500 req/day</span>
-      </label>
-      <label>
-        <div class="label-row">
-          <span>OpenRouter API Key (free)</span>
-          <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">create key</a>
-        </div>
+        <span class="hint" id="gem-hint">Google AI Studio · no card · 1M context · 1500/day</span></label>
+      <label><div class="label-row"><span>OpenRouter API Key (free)</span><a href="https://openrouter.ai/keys" target="_blank" rel="noopener">create key</a></div>
         <input type="password" id="or-input" placeholder="sk-or-v1-..." autocomplete="off" />
-        <span class="hint" id="or-hint">openrouter.ai · no card · 50 req/day cap on free models</span>
-      </label>
-      <label>
-        <div class="label-row">
-          <span>Groq API Key (free)</span>
-          <a href="https://console.groq.com/keys" target="_blank" rel="noopener">create key</a>
-        </div>
+        <span class="hint" id="or-hint">openrouter.ai · no card · 50/day cap on free models</span></label>
+      <label><div class="label-row"><span>Groq API Key (free)</span><a href="https://console.groq.com/keys" target="_blank" rel="noopener">create key</a></div>
         <input type="password" id="groq-input" placeholder="gsk_..." autocomplete="off" />
-        <span class="hint" id="groq-hint">console.groq.com · no card · Llama 3.1 8B (low TPM, last resort)</span>
-      </label>
+        <span class="hint" id="groq-hint">console.groq.com · no card · Llama 3.1 8B (low TPM, last resort)</span></label>
       <div class="modal-actions">
         <button id="modal-clear" type="button" class="danger">Clear all</button>
         <button id="modal-close" type="button">Close</button>
@@ -267,6 +167,7 @@
     <div class="modal">
       <h2>Proposed Change</h2>
       <div class="prop-meta" id="propMeta"></div>
+      <div class="prop-validate" id="propValidate"></div>
       <div class="prop-summary" id="propSummary"></div>
       <div class="prop-patches" id="propPatches"></div>
       <div class="modal-actions">
@@ -277,135 +178,109 @@
   </div>
 
   <script>
-    var REPO_OWNER = 'atomeam';
-    var REPO_NAME  = 'HomeBase-';
-    var LOG_PATH   = 'mini/log.jsonl';
-    var INDEX_PATH = 'mini/index.html';
-    var BRANCH     = 'main';
+    var REPO_OWNER='atomeam', REPO_NAME='HomeBase-', LOG_PATH='mini/log.jsonl', INDEX_PATH='mini/index.html', BRANCH='main';
+    var COHERE_MODEL='command-r-plus-08-2024';
+    var MISTRAL_MODEL='mistral-large-latest';
+    var GROQ_MODEL='llama-3.1-8b-instant';
+    var GEMINI_MODEL='gemini-2.0-flash';
+    var OPENROUTER_MODEL='google/gemini-2.0-flash-exp:free';
+    var OPENROUTER_FALLBACKS=['meta-llama/llama-3.3-70b-instruct:free','deepseek/deepseek-chat-v3.1:free','mistralai/mistral-small-3.2-24b-instruct:free'];
+    var POLLINATIONS_MODEL='openai';
 
-    var MISTRAL_MODEL = 'mistral-large-latest';
-    var GROQ_MODEL = 'llama-3.1-8b-instant';
-    var GEMINI_MODEL = 'gemini-2.0-flash';
-    var OPENROUTER_MODEL = 'google/gemini-2.0-flash-exp:free';
-    var OPENROUTER_FALLBACKS = [
-      'meta-llama/llama-3.3-70b-instruct:free',
-      'deepseek/deepseek-chat-v3.1:free',
-      'mistralai/mistral-small-3.2-24b-instruct:free'
-    ];
+    var KEY_CLICKS='homebase:clicks', KEY_TOKEN='homebase:gh:token',
+        KEY_COHERE='homebase:cohere:key', KEY_MISTRAL='homebase:mistral:key',
+        KEY_GEMINI='homebase:gemini:key', KEY_OPENROUTER='homebase:openrouter:key',
+        KEY_GROQ='homebase:groq:key', KEY_PENDING='homebase:pending';
 
-    var KEY_CLICKS     = 'homebase:clicks';
-    var KEY_TOKEN      = 'homebase:gh:token';
-    var KEY_MISTRAL    = 'homebase:mistral:key';
-    var KEY_GEMINI     = 'homebase:gemini:key';
-    var KEY_OPENROUTER = 'homebase:openrouter:key';
-    var KEY_GROQ       = 'homebase:groq:key';
-    var KEY_PENDING    = 'homebase:pending';
-
+    // legacy migration
     var oldLlm = localStorage.getItem('homebase:llm:key');
-    if (oldLlm && !localStorage.getItem(KEY_GROQ)) {
-      localStorage.setItem(KEY_GROQ, oldLlm);
-      localStorage.removeItem('homebase:llm:key');
-    }
-    if (localStorage.getItem('homebase:openai:key')) {
-      localStorage.removeItem('homebase:openai:key');
-    }
+    if (oldLlm && !localStorage.getItem(KEY_GROQ)) { localStorage.setItem(KEY_GROQ, oldLlm); localStorage.removeItem('homebase:llm:key'); }
+    if (localStorage.getItem('homebase:openai:key')) localStorage.removeItem('homebase:openai:key');
 
-    var btn         = document.getElementById('homebase-button');
-    var counter     = document.getElementById('counter');
-    var clicksLabel = document.getElementById('clicksLabel');
-    var dot         = document.getElementById('dot');
-    var statusMsg   = document.getElementById('statusMsg');
-    var gear        = document.getElementById('gear');
-    var banner      = document.getElementById('banner');
-    var bannerKind  = document.getElementById('bannerKind');
-    var bannerText  = document.getElementById('bannerText');
-    var intent      = document.getElementById('intent');
-    var proposeBtn  = document.getElementById('proposeBtn');
-    var modalBg     = document.getElementById('modalBg');
-    var ghInput     = document.getElementById('gh-input');
-    var ghHint      = document.getElementById('gh-hint');
-    var mstInput    = document.getElementById('mst-input');
-    var mstHint     = document.getElementById('mst-hint');
-    var gemInput    = document.getElementById('gem-input');
-    var gemHint     = document.getElementById('gem-hint');
-    var orInput     = document.getElementById('or-input');
-    var orHint      = document.getElementById('or-hint');
-    var groqInput   = document.getElementById('groq-input');
-    var groqHint    = document.getElementById('groq-hint');
-    var propModalBg = document.getElementById('propModalBg');
-    var propMeta    = document.getElementById('propMeta');
-    var propSummary = document.getElementById('propSummary');
-    var propPatches = document.getElementById('propPatches');
-    var propApplyBtn= document.getElementById('prop-apply');
-    var propSkipBtn = document.getElementById('prop-skip');
+    var btn=document.getElementById('homebase-button'), counter=document.getElementById('counter'),
+        clicksLabel=document.getElementById('clicksLabel'), dot=document.getElementById('dot'),
+        statusMsg=document.getElementById('statusMsg'), gear=document.getElementById('gear'),
+        banner=document.getElementById('banner'), bannerKind=document.getElementById('bannerKind'),
+        bannerText=document.getElementById('bannerText'), intent=document.getElementById('intent'),
+        proposeBtn=document.getElementById('proposeBtn'), modalBg=document.getElementById('modalBg'),
+        ghInput=document.getElementById('gh-input'), ghHint=document.getElementById('gh-hint'),
+        coInput=document.getElementById('co-input'), coHint=document.getElementById('co-hint'),
+        mstInput=document.getElementById('mst-input'), mstHint=document.getElementById('mst-hint'),
+        gemInput=document.getElementById('gem-input'), gemHint=document.getElementById('gem-hint'),
+        orInput=document.getElementById('or-input'), orHint=document.getElementById('or-hint'),
+        groqInput=document.getElementById('groq-input'), groqHint=document.getElementById('groq-hint'),
+        propModalBg=document.getElementById('propModalBg'), propMeta=document.getElementById('propMeta'),
+        propValidate=document.getElementById('propValidate'), propSummary=document.getElementById('propSummary'),
+        propPatches=document.getElementById('propPatches'),
+        propApplyBtn=document.getElementById('prop-apply'), propSkipBtn=document.getElementById('prop-skip');
 
-    var token         = localStorage.getItem(KEY_TOKEN) || null;
-    var mistralKey    = localStorage.getItem(KEY_MISTRAL) || null;
-    var geminiKey     = localStorage.getItem(KEY_GEMINI) || null;
-    var openrouterKey = localStorage.getItem(KEY_OPENROUTER) || null;
-    var groqKey       = localStorage.getItem(KEY_GROQ) || null;
-    var clicks = Number(localStorage.getItem(KEY_CLICKS) || 0);
-    if (!isFinite(clicks)) clicks = 0;
-    counter.textContent = clicks;
+    var token=localStorage.getItem(KEY_TOKEN)||null, cohereKey=localStorage.getItem(KEY_COHERE)||null,
+        mistralKey=localStorage.getItem(KEY_MISTRAL)||null, geminiKey=localStorage.getItem(KEY_GEMINI)||null,
+        openrouterKey=localStorage.getItem(KEY_OPENROUTER)||null, groqKey=localStorage.getItem(KEY_GROQ)||null;
+    var clicks=Number(localStorage.getItem(KEY_CLICKS)||0); if(!isFinite(clicks)) clicks=0;
+    counter.textContent=clicks;
+    var queue=[]; try{queue=JSON.parse(localStorage.getItem(KEY_PENDING)||'[]')}catch(e){queue=[]}
+    if(!Array.isArray(queue)) queue=[];
+    var draining=false, cache=null, bannerTimer=null, pendingProposal=null;
 
-    var queue = [];
-    try { queue = JSON.parse(localStorage.getItem(KEY_PENDING) || '[]'); } catch (e) { queue = []; }
-    if (!Array.isArray(queue)) queue = [];
-    var draining = false;
-    var cache = null;
-    var bannerTimer = null;
-    var pendingProposal = null;
+    function saveQueue(){ localStorage.setItem(KEY_PENDING,JSON.stringify(queue)); }
+    function showBanner(kind,html,autoHideMs){ banner.className='banner show '+kind; bannerKind.textContent=kind; bannerText.innerHTML=html; if(bannerTimer)clearTimeout(bannerTimer); if(autoHideMs)bannerTimer=setTimeout(hideBanner,autoHideMs); }
+    function hideBanner(){ banner.className='banner'; if(bannerTimer){clearTimeout(bannerTimer); bannerTimer=null;} }
+    banner.addEventListener('click',function(e){ if(e.target.tagName!=='A') hideBanner(); });
+    function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-    function saveQueue() { localStorage.setItem(KEY_PENDING, JSON.stringify(queue)); }
-
-    function showBanner(kind, html, autoHideMs) {
-      banner.className = 'banner show ' + kind;
-      bannerKind.textContent = kind;
-      bannerText.innerHTML = html;
-      if (bannerTimer) clearTimeout(bannerTimer);
-      if (autoHideMs) bannerTimer = setTimeout(hideBanner, autoHideMs);
-    }
-    function hideBanner() {
-      banner.className = 'banner';
-      if (bannerTimer) { clearTimeout(bannerTimer); bannerTimer = null; }
-    }
-    banner.addEventListener('click', function(e){ if (e.target.tagName !== 'A') hideBanner(); });
-    function escapeHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-    function setStatus(kind, msg) {
+    function setStatus(kind,msg){
       dot.classList.remove('ok','pending','error');
-      if (kind && kind !== 'idle') dot.classList.add(kind);
-      var labels = {
-        idle: token ? 'ready' : 'no token',
-        ok: 'logged',
-        pending: 'writing… q:' + queue.length,
-        error: 'error'
-      };
-      statusMsg.textContent = labels[kind] || labels.idle;
-      dot.title = kind === 'error' ? (msg || 'Error') :
-                  kind === 'pending' ? (queue.length + ' pending') :
-                  kind === 'ok' ? 'Last write OK' :
-                  token ? 'Token set. Ready.' : 'No token. Click gear to set up.';
+      if(kind&&kind!=='idle') dot.classList.add(kind);
+      var labels={ idle: token?'ready':'no token', ok:'logged', pending:'writing… q:'+queue.length, error:'error' };
+      statusMsg.textContent=labels[kind]||labels.idle;
+      dot.title = kind==='error'?(msg||'Error'):kind==='pending'?(queue.length+' pending'):kind==='ok'?'Last write OK':(token?'Token set. Ready.':'No token. Click gear to set up.');
     }
+    function b64encode(s){ return btoa(unescape(encodeURIComponent(s))); }
+    function b64decode(s){ try{return decodeURIComponent(escape(atob(s.replace(/\s/g,''))))}catch(e){return ''} }
 
-    function b64encode(s) { return btoa(unescape(encodeURIComponent(s))); }
-    function b64decode(s) {
-      try { return decodeURIComponent(escape(atob(s.replace(/\s/g,'')))); } catch (e) { return ''; }
+    async function ghGetFile(path){
+      path=path||LOG_PATH;
+      var url='https://api.github.com/repos/'+REPO_OWNER+'/'+REPO_NAME+'/contents/'+path+'?ref='+BRANCH+'&t='+Date.now();
+      var r=await fetch(url,{headers:{'Authorization':'token '+token,'Accept':'application/vnd.github+json'},cache:'no-store'});
+      if(r.status===404) return {sha:null,content:''};
+      if(!r.ok){ var txt=''; try{txt=(await r.json()).message||''}catch(e){} var err=new Error('GET '+r.status+(txt?': '+txt:'')); err.status=r.status; throw err; }
+      var j=await r.json(); return {sha:j.sha,content:b64decode(j.content||'')};
     }
+    async function ghGetCommits(limit){
+      limit=limit||25;
+      var url='https://api.github.com/repos/'+REPO_OWNER+'/'+REPO_NAME+'/commits?sha='+BRANCH+'&per_page='+limit+'&t='+Date.now();
+      var r=await fetch(url,{headers:{'Authorization':'token '+token,'Accept':'application/vnd.github+json'},cache:'no-store'});
+      if(!r.ok) return [];
+      var j=await r.json();
+      return j.map(function(c){ var m=(c.commit&&c.commit.message)||''; return m.split('\n')[0]; });
+    }
+    async function ghPutFile(content,sha,commitMessage,branchName){
+      var url='https://api.github.com/repos/'+REPO_OWNER+'/'+REPO_NAME+'/contents/'+LOG_PATH;
+      var body={ message: commitMessage||('log: '+new Date().toISOString()), content:b64encode(content), branch:branchName||BRANCH };
+      if(sha) body.sha=sha;
+      var r=await fetch(url,{method:'PUT',headers:{'Authorization':'token '+token,'Accept':'application/vnd.github+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+      if(!r.ok){ var txt=''; try{txt=(await r.json()).message||''}catch(e){} var err=new Error('PUT '+r.status+(txt?': '+txt:'')); err.status=r.status; throw err; }
+      var j=await r.json(); return j.content&&j.content.sha;
+    }
+    function shortenForCommit(note){ var s=note.replace(/\s+/g,' ').trim(); if(s.length>64) s=s.slice(0,61)+'…'; return s; }
 
-    async function ghGetFile(path) {
-      path = path || LOG_PATH;
-      var url = 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME +
-                '/contents/' + path + '?ref=' + BRANCH + '&t=' + Date.now();
-      var r = await fetch(url, {
-        headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github+json' },
-        cache: 'no-store'
-      });
-      if (r.status === 404) return { sha: null, content: '' };
-      if (!r.ok) {
-        var txt = ''; try { txt = (await r.json()).message || ''; } catch(e){}
-        var err = new Error('GET ' + r.status + (txt ? ': ' + txt : ''));
-        err.status = r.status; throw err;
+    async function writeOne(entry){
+      if(!cache) cache=await ghGetFile(LOG_PATH);
+      var line=JSON.stringify(entry); var sep=(cache.content&&!cache.content.endsWith('\n'))?'\n':'';
+      var newContent=cache.content+sep+line+'\n';
+      var msg=entry.note?'log: '+shortenForCommit(entry.note):'log: '+entry.ts;
+      try{ var newSha=await ghPutFile(newContent,cache.sha,msg); cache={sha:newSha,content:newContent}; }
+      catch(e){ if(e.status===409||e.status===422){ cache=await ghGetFile(LOG_PATH); var sep2=(cache.content&&!cache.content.endsWith('\n'))?'\n':''; var newContent2=cache.content+sep2+line+'\n'; var newSha2=await ghPutFile(newContent2,cache.sha,msg); cache={sha:newSha2,content:newContent2}; } else throw e; }
+    }
+    async function drain(){
+      if(draining) return; if(!token){setStatus('idle'); return;} if(!queue.length){setStatus('ok'); return;}
+      draining=true; setStatus('pending');
+      while(queue.length){
+        var entry=queue[0];
+        try{ await writeOne(entry); queue.shift(); saveQueue(); setStatus('pending'); }
+        catch(e){ console.error('[homebase] write failed:',e); setStatus('error',e.message);
+          showBanner('error','WRITE FAILED — '+escapeHtml(e.message)); draining=false; setTimeout(drain,5000); return; }
       }
       var j = await r.json();
       return { sha: j.sha, content: b64decode(j.content || '') };
@@ -539,436 +414,375 @@
       if (e.code !== 'Space' && e.key !== ' ') return;
       var t = e.target; var tag = t && t.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'BUTTON' || (t && t.isContentEditable)) return;
+      setStatus('ok'); draining=false;
+    }
+    var lastNote=null;
+    function logClick(note){ var entry={ts:new Date().toISOString(),clicks:clicks}; if(note) entry.note=note; queue.push(entry); if(note) lastNote=note; saveQueue(); drain(); }
+
+    function bump(){ counter.classList.remove('bump'); void counter.offsetWidth; counter.classList.add('bump'); setTimeout(function(){counter.classList.remove('bump')},250); }
+    var idleTimer=null;
+    function armIdle(){ btn.classList.remove('idle'); if(idleTimer)clearTimeout(idleTimer); idleTimer=setTimeout(function(){btn.classList.add('idle')},10000); }
+    function press(){
+      clicks++; localStorage.setItem(KEY_CLICKS,String(clicks));
+      counter.textContent=clicks; bump(); armIdle();
+      var note=intent.value.trim(); if(note) intent.value='';
+      if(!token){ showBanner('warn','NOT LOGGING — click the ⚙ in the footer to paste a GitHub token.',4000); return; }
+      logClick(note||undefined);
+    }
+    btn.addEventListener('click',press);
+    clicksLabel.addEventListener('dblclick',function(){ clicks=0; localStorage.setItem(KEY_CLICKS,'0'); counter.textContent=0; bump(); });
+    document.getElementById('replayBtn').addEventListener('click',function(){ if(lastNote){ intent.value=lastNote; press(); } else { showBanner('warn','No intent note to replay.',2000); } });
+    intent.addEventListener('keydown',function(e){ if(e.key==='Enter'){e.preventDefault(); press();} else if(e.key==='Escape'){intent.value=''; intent.blur();} });
+    document.addEventListener('keydown',function(e){
+      if(e.code!=='Space'&&e.key!==' ') return;
+      var t=e.target, tag=t&&t.tagName;
+      if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||tag==='BUTTON'||(t&&t.isContentEditable)) return;
       e.preventDefault(); btn.click();
     });
 
-    function openModal() {
-      ghInput.value = token || '';
-      mstInput.value = mistralKey || '';
-      gemInput.value = geminiKey || '';
-      orInput.value = openrouterKey || '';
-      groqInput.value = groqKey || '';
-      ghHint.className = 'hint';
-      mstHint.className = 'hint';
-      gemHint.className = 'hint';
-      orHint.className = 'hint';
-      groqHint.className = 'hint';
-      ghHint.textContent = 'Fine-grained PAT · atomeam/HomeBase- · Contents + Pull requests: Read & write';
-      mstHint.textContent = 'console.mistral.ai · phone verify, no card · 131K context · 1B tokens/month';
-      gemHint.textContent = 'Google AI Studio · no credit card · 1M context · 1500 req/day';
-      orHint.textContent = 'openrouter.ai · no card · 50 req/day cap on free models';
-      groqHint.textContent = 'console.groq.com · no card · Llama 3.1 8B (low TPM, last resort)';
-      modalBg.hidden = false;
-      setTimeout(function(){ ghInput.focus(); }, 50);
+    function openModal(){
+      ghInput.value=token||''; coInput.value=cohereKey||''; mstInput.value=mistralKey||'';
+      gemInput.value=geminiKey||''; orInput.value=openrouterKey||''; groqInput.value=groqKey||'';
+      [ghHint,coHint,mstHint,gemHint,orHint,groqHint].forEach(function(h){h.className='hint'});
+      ghHint.textContent='Fine-grained PAT · atomeam/HomeBase- · Contents + Pull requests: Read & write';
+      coHint.textContent='dashboard.cohere.com · no card · Command R+ · 128K context · 1000/month';
+      mstHint.textContent='console.mistral.ai · phone verify, no card · 131K context · 1B tokens/month';
+      gemHint.textContent='Google AI Studio · no card · 1M context · 1500/day';
+      orHint.textContent='openrouter.ai · no card · 50/day cap on free models';
+      groqHint.textContent='console.groq.com · no card · Llama 3.1 8B (low TPM, last resort)';
+      modalBg.hidden=false; setTimeout(function(){ghInput.focus()},50);
     }
-    function closeModal() { modalBg.hidden = true; }
-    gear.addEventListener('click', openModal);
-    modalBg.addEventListener('click', function(e){ if (e.target === modalBg) closeModal(); });
-    document.getElementById('modal-close').addEventListener('click', closeModal);
-    document.getElementById('modal-clear').addEventListener('click', function(){
-      localStorage.removeItem(KEY_TOKEN);
-      localStorage.removeItem(KEY_MISTRAL);
-      localStorage.removeItem(KEY_GEMINI);
-      localStorage.removeItem(KEY_OPENROUTER);
-      localStorage.removeItem(KEY_GROQ);
-      token = null; mistralKey = null; geminiKey = null; openrouterKey = null; groqKey = null;
-      ghInput.value = ''; mstInput.value = ''; gemInput.value = ''; orInput.value = ''; groqInput.value = '';
-      cache = null;
-      setStatus('idle');
-      showBanner('warn', 'All keys cleared.', 2500);
-      closeModal();
+    function closeModal(){ modalBg.hidden=true; }
+    gear.addEventListener('click',openModal);
+    modalBg.addEventListener('click',function(e){ if(e.target===modalBg) closeModal(); });
+    document.getElementById('modal-close').addEventListener('click',closeModal);
+    document.getElementById('modal-clear').addEventListener('click',function(){
+      [KEY_TOKEN,KEY_COHERE,KEY_MISTRAL,KEY_GEMINI,KEY_OPENROUTER,KEY_GROQ].forEach(function(k){localStorage.removeItem(k)});
+      token=cohereKey=mistralKey=geminiKey=openrouterKey=groqKey=null;
+      ghInput.value=coInput.value=mstInput.value=gemInput.value=orInput.value=groqInput.value='';
+      cache=null; setStatus('idle'); showBanner('warn','All keys cleared.',2500); closeModal();
     });
-    document.getElementById('modal-save').addEventListener('click', async function(){
-      var newGh = ghInput.value.trim();
-      var newMst = mstInput.value.trim();
-      var newGem = gemInput.value.trim();
-      var newOr = orInput.value.trim();
-      var newGroq = groqInput.value.trim();
-      if (newGh) {
-        token = newGh; localStorage.setItem(KEY_TOKEN, token); cache = null;
-        var ok = await testGhToken(); ghHint.className = 'hint ' + (ok ? 'ok' : 'bad');
-      }
-      if (newMst) {
-        mistralKey = newMst; localStorage.setItem(KEY_MISTRAL, mistralKey);
-        var okM = await testMistralKey(); mstHint.className = 'hint ' + (okM ? 'ok' : 'bad');
-      }
-      if (newGem) {
-        geminiKey = newGem; localStorage.setItem(KEY_GEMINI, geminiKey);
-        var okG = await testGeminiKey(); gemHint.className = 'hint ' + (okG ? 'ok' : 'bad');
-      }
-      if (newOr) {
-        openrouterKey = newOr; localStorage.setItem(KEY_OPENROUTER, openrouterKey);
-        var okO = await testOpenrouterKey(); orHint.className = 'hint ' + (okO ? 'ok' : 'bad');
-      }
-      if (newGroq) {
-        groqKey = newGroq; localStorage.setItem(KEY_GROQ, groqKey);
-        var okQ = await testGroqKey(); groqHint.className = 'hint ' + (okQ ? 'ok' : 'bad');
-      }
-      setStatus(token ? (queue.length ? 'pending' : 'ok') : 'idle');
-      if (token && queue.length) drain();
+    document.getElementById('modal-save').addEventListener('click',async function(){
+      var nGh=ghInput.value.trim(), nCo=coInput.value.trim(), nMst=mstInput.value.trim(),
+          nGem=gemInput.value.trim(), nOr=orInput.value.trim(), nGroq=groqInput.value.trim();
+      if(nGh){ token=nGh; localStorage.setItem(KEY_TOKEN,token); cache=null; var ok=await testGhToken(); ghHint.className='hint '+(ok?'ok':'bad'); }
+      if(nCo){ cohereKey=nCo; localStorage.setItem(KEY_COHERE,cohereKey); var okC=await testCohereKey(); coHint.className='hint '+(okC?'ok':'bad'); }
+      if(nMst){ mistralKey=nMst; localStorage.setItem(KEY_MISTRAL,mistralKey); var okM=await testMistralKey(); mstHint.className='hint '+(okM?'ok':'bad'); }
+      if(nGem){ geminiKey=nGem; localStorage.setItem(KEY_GEMINI,geminiKey); var okG=await testGeminiKey(); gemHint.className='hint '+(okG?'ok':'bad'); }
+      if(nOr){ openrouterKey=nOr; localStorage.setItem(KEY_OPENROUTER,openrouterKey); var okO=await testOpenrouterKey(); orHint.className='hint '+(okO?'ok':'bad'); }
+      if(nGroq){ groqKey=nGroq; localStorage.setItem(KEY_GROQ,groqKey); var okQ=await testGroqKey(); groqHint.className='hint '+(okQ?'ok':'bad'); }
+      setStatus(token?(queue.length?'pending':'ok'):'idle'); if(token&&queue.length) drain();
     });
 
-    async function testGhToken() {
-      try {
-        var r = await fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME, {
-          headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github+json' }
-        });
-        if (r.ok) { ghHint.textContent = 'OK · connected to ' + REPO_OWNER + '/' + REPO_NAME; return true; }
-        var msg = ''; try { msg = (await r.json()).message || ''; } catch(e){}
-        ghHint.textContent = 'BAD ' + r.status + ': ' + msg;
-        return false;
-      } catch (e) { ghHint.textContent = 'TEST FAILED: ' + e.message; return false; }
+    async function testGhToken(){
+      try{ var r=await fetch('https://api.github.com/repos/'+REPO_OWNER+'/'+REPO_NAME,{headers:{'Authorization':'token '+token,'Accept':'application/vnd.github+json'}});
+        if(r.ok){ ghHint.textContent='OK · connected to '+REPO_OWNER+'/'+REPO_NAME; return true; }
+        var msg=''; try{msg=(await r.json()).message||''}catch(e){} ghHint.textContent='BAD '+r.status+': '+msg; return false;
+      }catch(e){ ghHint.textContent='TEST FAILED: '+e.message; return false; }
     }
-    async function testMistralKey() {
-      try {
-        var r = await fetch('https://api.mistral.ai/v1/models', { headers: { 'Authorization': 'Bearer ' + mistralKey } });
-        if (r.ok) { mstHint.textContent = 'OK · Mistral ready (' + MISTRAL_MODEL + ')'; return true; }
-        var j = {}; try { j = await r.json(); } catch(e){}
-        mstHint.textContent = 'BAD: ' + ((j.message) || (j.error && j.error.message) || ('status ' + r.status));
-        return false;
-      } catch (e) { mstHint.textContent = 'TEST FAILED: ' + e.message; return false; }
+    async function testCohereKey(){
+      try{ var r=await fetch('https://api.cohere.com/v1/models',{headers:{'Authorization':'Bearer '+cohereKey}});
+        if(r.ok){ coHint.textContent='OK · Cohere ready ('+COHERE_MODEL+')'; return true; }
+        var j={}; try{j=await r.json()}catch(e){} coHint.textContent='BAD: '+((j.message)||(j.error&&j.error.message)||('status '+r.status)); return false;
+      }catch(e){ coHint.textContent='TEST FAILED: '+e.message; return false; }
     }
-    async function testGeminiKey() {
-      try {
-        var r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?key=' + encodeURIComponent(geminiKey));
-        if (r.ok) { gemHint.textContent = 'OK · Gemini ready'; return true; }
-        var j = {}; try { j = await r.json(); } catch(e){}
-        gemHint.textContent = 'BAD: ' + ((j.error && j.error.message) || ('status ' + r.status));
-        return false;
-      } catch (e) { gemHint.textContent = 'TEST FAILED: ' + e.message; return false; }
+    async function testMistralKey(){
+      try{ var r=await fetch('https://api.mistral.ai/v1/models',{headers:{'Authorization':'Bearer '+mistralKey}});
+        if(r.ok){ mstHint.textContent='OK · Mistral ready ('+MISTRAL_MODEL+')'; return true; }
+        var j={}; try{j=await r.json()}catch(e){} mstHint.textContent='BAD: '+((j.message)||(j.error&&j.error.message)||('status '+r.status)); return false;
+      }catch(e){ mstHint.textContent='TEST FAILED: '+e.message; return false; }
     }
-    async function testOpenrouterKey() {
-      try {
-        var r = await fetch('https://openrouter.ai/api/v1/auth/key', { headers: { 'Authorization': 'Bearer ' + openrouterKey } });
-        if (r.ok) { orHint.textContent = 'OK · OpenRouter ready (50/day free cap)'; return true; }
-        var j = {}; try { j = await r.json(); } catch(e){}
-        orHint.textContent = 'BAD: ' + ((j.error && j.error.message) || ('status ' + r.status));
-        return false;
-      } catch (e) { orHint.textContent = 'TEST FAILED: ' + e.message; return false; }
+    async function testGeminiKey(){
+      try{ var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+encodeURIComponent(geminiKey));
+        if(r.ok){ gemHint.textContent='OK · Gemini ready'; return true; }
+        var j={}; try{j=await r.json()}catch(e){} gemHint.textContent='BAD: '+((j.error&&j.error.message)||('status '+r.status)); return false;
+      }catch(e){ gemHint.textContent='TEST FAILED: '+e.message; return false; }
     }
-    async function testGroqKey() {
-      try {
-        var r = await fetch('https://api.groq.com/openai/v1/models', { headers: { 'Authorization': 'Bearer ' + groqKey } });
-        if (r.ok) { groqHint.textContent = 'OK · Groq ready (' + GROQ_MODEL + ')'; return true; }
-        var j = {}; try { j = await r.json(); } catch(e){}
-        groqHint.textContent = 'BAD: ' + ((j.error && j.error.message) || ('status ' + r.status));
-        return false;
-      } catch (e) { groqHint.textContent = 'TEST FAILED: ' + e.message; return false; }
+    async function testOpenrouterKey(){
+      try{ var r=await fetch('https://openrouter.ai/api/v1/auth/key',{headers:{'Authorization':'Bearer '+openrouterKey}});
+        if(r.ok){ orHint.textContent='OK · OpenRouter ready (50/day free cap)'; return true; }
+        var j={}; try{j=await r.json()}catch(e){} orHint.textContent='BAD: '+((j.error&&j.error.message)||('status '+r.status)); return false;
+      }catch(e){ orHint.textContent='TEST FAILED: '+e.message; return false; }
+    }
+    async function testGroqKey(){
+      try{ var r=await fetch('https://api.groq.com/openai/v1/models',{headers:{'Authorization':'Bearer '+groqKey}});
+        if(r.ok){ groqHint.textContent='OK · Groq ready ('+GROQ_MODEL+')'; return true; }
+        var j={}; try{j=await r.json()}catch(e){} groqHint.textContent='BAD: '+((j.error&&j.error.message)||('status '+r.status)); return false;
+      }catch(e){ groqHint.textContent='TEST FAILED: '+e.message; return false; }
     }
 
-    var STYLE_PLACEHOLDER = '<style>/* CSS_HIDDEN_FROM_PROMPT_DO_NOT_PATCH */</style>';
-    function splitStyle(html) {
-      var m = html.match(/<style>[\s\S]*?<\/style>/);
-      if (!m) return { working: html, originalStyle: null };
-      var working = html.slice(0, m.index) + STYLE_PLACEHOLDER + html.slice(m.index + m[0].length);
-      return { working: working, originalStyle: m[0] };
+    // === Patch validation ===
+    var FORBIDDEN_PATTERNS = [
+      { re: /truncated/i,             reason: 'placeholder word "truncated"' },
+      { re: /\bTODO\b/,               reason: 'TODO marker' },
+      { re: /actual would be/i,       reason: 'placeholder "actual would be"' },
+      { re: /for brevity/i,           reason: 'placeholder "for brevity"' },
+      { re: /\.\.\.(?=\s*['"`)\]])/,  reason: '"..." placeholder before quote/paren' },
+      { re: /<your[^>]*>/i,           reason: '<your...> placeholder' },
+      { re: /XXXX+/,                  reason: 'XXXX placeholder' }
+    ];
+    function checkForbiddenInPatch(p){
+      for(var i=0;i<FORBIDDEN_PATTERNS.length;i++){ var fp=FORBIDDEN_PATTERNS[i]; if(fp.re.test(p.replace)) return fp.reason; }
+      return null;
     }
-    function restoreStyle(patched, split) {
-      if (!split.originalStyle) return patched;
-      var i = patched.indexOf(STYLE_PLACEHOLDER);
-      if (i === -1) throw new Error('Style placeholder lost during patching');
-      return patched.slice(0, i) + split.originalStyle + patched.slice(i + STYLE_PLACEHOLDER.length);
+    function extractScript(html){ var m=html.match(/<script>([\s\S]*?)<\/script>/); return m?m[1]:null; }
+    function validatePatched(html, originalHtml){
+      var issues=[];
+      if(html.length < originalHtml.length*0.7) issues.push('result shrank >30%');
+      if(html.length < 5000) issues.push('result <5KB');
+      if(!/<\/html>\s*$/i.test(html.trim())) issues.push('missing </html>');
+      if(!/<script>/.test(html)) issues.push('missing <script>');
+      if(!/build v\d+/.test(html)) issues.push('lost build-stamp');
+      var script=extractScript(html);
+      if(!script) issues.push('no script extracted');
+      else { try{ new Function(script); }catch(e){ issues.push('JS syntax: '+e.message); } }
+      var required=['function press','function logClick','function drain','proposeChange','callLlm','pendingProposal'];
+      for(var i=0;i<required.length;i++){ if(script&&script.indexOf(required[i])===-1) issues.push('removed: '+required[i]); }
+      return issues;
     }
-
-    function applyPatches(html, patches) {
-      if (!Array.isArray(patches) || !patches.length) throw new Error('No patches returned');
-      var out = html;
-      for (var i = 0; i < patches.length; i++) {
-        var p = patches[i];
-        if (!p || typeof p.find !== 'string' || typeof p.replace !== 'string') throw new Error('Patch ' + (i+1) + ' missing find/replace');
-        if (!p.find.length) throw new Error('Patch ' + (i+1) + ' has empty find');
-        if (p.find.indexOf('CSS_HIDDEN_FROM_PROMPT_DO_NOT_PATCH') !== -1) throw new Error('Patch ' + (i+1) + ' tries to edit hidden CSS placeholder');
-        var idx = out.indexOf(p.find);
-        if (idx === -1) throw new Error('Patch ' + (i+1) + ' find not in source: ' + p.find.slice(0, 60));
-        var idx2 = out.indexOf(p.find, idx + 1);
-        if (idx2 !== -1) throw new Error('Patch ' + (i+1) + ' find is ambiguous');
-        out = out.slice(0, idx) + p.replace + out.slice(idx + p.find.length);
+    function applyPatches(html, patches){
+      if(!Array.isArray(patches)||!patches.length) throw new Error('No patches returned');
+      var out=html;
+      for(var i=0;i<patches.length;i++){
+        var p=patches[i];
+        if(!p||typeof p.find!=='string'||typeof p.replace!=='string') throw new Error('Patch '+(i+1)+' missing find/replace');
+        if(!p.find.length) throw new Error('Patch '+(i+1)+' empty find');
+        var forbidden=checkForbiddenInPatch(p);
+        if(forbidden) throw new Error('Patch '+(i+1)+' rejected: '+forbidden);
+        var idx=out.indexOf(p.find);
+        if(idx===-1) throw new Error('Patch '+(i+1)+' find not in source: '+p.find.slice(0,60));
+        if(out.indexOf(p.find,idx+1)!==-1) throw new Error('Patch '+(i+1)+' ambiguous (multiple matches)');
+        out=out.slice(0,idx)+p.replace+out.slice(idx+p.find.length);
       }
       return out;
     }
 
-    function buildPrompt(notesArr, commitsArr, slimHtml) {
-      var notesText = notesArr.length
-        ? notesArr.map(function(n, i){ return (i+1) + '. ' + n; }).join('\n')
-        : '(no user notes yet)';
-      var commitsText = commitsArr.length
-        ? commitsArr.map(function(c){ return '- ' + c; }).join('\n')
-        : '(no recent commits)';
+    function buildPrompt(notesArr, commitsArr, fullHtml){
+      var notesText = notesArr.length ? notesArr.map(function(n,i){return (i+1)+'. '+n}).join('\n') : '(no user notes yet)';
+      var commitsText = commitsArr.length ? commitsArr.map(function(c){return '- '+c}).join('\n') : '(no recent commits)';
       return [
-        'You evolve HomeBase, a single-file HTML app where the user clicks a button + writes intent notes.',
+        'You evolve HomeBase, a self-modifying single-file HTML app. User clicks a button (logged to GitHub) and writes intent notes that you read.',
         '',
-        'TASK: Propose ONE small, REAL, WORKING new capability. Must do something observable when used.',
+        '== YOUR JOB ==',
+        'Propose ONE small WORKING new capability. The result is auto-committed and auto-reloaded. If it doesn\'t function, the user notices immediately.',
         '',
-        'CRITICAL: Look at RECENT COMMITS below. DO NOT propose anything already implemented (e.g. don\'t add an intent input if it already exists, don\'t add settings modal if it exists, etc).',
-        'Look at USER NOTES to understand what the user actually wants next. Prioritize their stated intent over generic improvements.',
+        '== DATA MODEL (DO NOT INVENT NEW SHAPES) ==',
+        '- localStorage "homebase:clicks" = number',
+        '- localStorage "homebase:pending" = JSON array of UNSENT log entries (drains to GitHub then empties — NOT a permanent log)',
+        '- GitHub mini/log.jsonl = authoritative log (newline-delimited JSON: { ts, clicks, note? })',
+        '- Existing functions: logClick(noteStr), showBanner(kind,htmlStr,autoHideMs), ghGetFile(path), proposeChange()',
+        '- Existing globals: clicks, queue, token, intent, btn, counter',
         '',
-        'OUTPUT: JSON only, no markdown, no prose:',
-        '{ "summary": "one short sentence describing the new capability", "patches": [ { "find": "<unique substring>", "replace": "<new substring>" } ] }',
+        '== HARD RULES ==',
+        '1. NO placeholder text in your replace strings. Forbidden: "truncated", "for brevity", "actual would be", "placeholder", "TODO", "XXXX", "..." before a quote. The replace string is exactly what ships.',
+        '2. NO fake data URLs. Don\'t add audio/image/font data URLs unless you include the COMPLETE valid base64.',
+        '3. NO references to functions, vars, classes, or IDs that don\'t exist in the file shown.',
+        '4. Any new DOM element MUST be styled, either inline via style="..." OR by adding a <style>...</style> tag inside <body> (NEVER touch the <head> <style>).',
+        '5. Preserve everything that works: GitHub logging, intent input, propose flow, modal settings, all API keys, click counter, idle pulse, spacebar. DO NOT remove any function whose name appears in the file.',
+        '6. The <div class="build-stamp">build vN</div> must remain (you may bump N).',
+        '7. Each patch.find must appear EXACTLY ONCE. Smallest unique anchor.',
+        '8. 1–3 patches max. No external deps. No new files.',
+        '9. Escape JSON correctly (\\n, \\", \\\\).',
         '',
-        'RULES:',
-        '- Each patch.find must appear EXACTLY ONCE in the file shown. Smallest unique anchor.',
-        '- DO NOT edit the <style> block — CSS is hidden and replaced with a placeholder. Never patch lines containing CSS_HIDDEN_FROM_PROMPT.',
-        '- Preserve everything that already works: GitHub logging, intent input, propose flow, modal settings, all API keys, click counter, idle pulse, spacebar.',
-        '- Real > fake. The new thing must function, not just appear.',
-        '- 1–3 patches max. No external dependencies. No new files.',
-        '- Escape JSON strings properly (\\n for newlines, \\" for quotes inside strings).',
+        '== WHAT MAKES A GOOD PROPOSAL ==',
+        '- Look at RECENT COMMITS — do NOT redo or duplicate anything already implemented.',
+        '- Look at USER NOTES — prioritize what they explicitly want.',
+        '- Trace mentally: "User does X → element Y fires → function Z runs → visible result." If any step has no wiring, ADD it in the patch.',
+        '- A new UI element needs 3 things: markup + styling + wired event handler.',
         '',
-        'RECENT COMMITS (already done — do not redo these):',
+        '== OUTPUT (JSON ONLY, NO MARKDOWN) ==',
+        '{ "summary": "<one short sentence>", "reasoning": "<2-3 sentences: why this, why now, end-to-end mechanic>", "patches": [ { "find": "<unique>", "replace": "<new>" } ] }',
+        '',
+        '== RECENT COMMITS (do not redo) ==',
         commitsText,
         '',
-        'RECENT USER NOTES (most recent last — what they want next):',
+        '== USER NOTES (newest last — what they want next) ==',
         notesText,
         '',
-        'CURRENT FILE (mini/index.html, CSS replaced with placeholder):',
-        '```html',
-        slimHtml,
-        '```'
+        '== CURRENT FILE (mini/index.html, complete) ==',
+        '```html', fullHtml, '```'
       ].join('\n');
     }
 
-    async function callMistral(prompt) {
-      var r = await fetch('https://api.mistral.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + mistralKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: MISTRAL_MODEL,
-          messages: [
-            { role: 'system', content: 'You output strict JSON only. No markdown fences. No prose outside the JSON object.' },
-            { role: 'user', content: prompt }
-          ],
-          response_format: { type: 'json_object' },
-          temperature: 0.5,
-          max_tokens: 4096
-        })
+    async function callCohere(prompt){
+      var r=await fetch('https://api.cohere.com/v2/chat',{method:'POST',
+        headers:{'Authorization':'Bearer '+cohereKey,'Content-Type':'application/json','Accept':'application/json'},
+        body:JSON.stringify({ model:COHERE_MODEL, messages:[
+          {role:'system',content:'You output strict JSON only. No markdown fences. No prose outside the JSON object.'},
+          {role:'user',content:prompt}
+        ], response_format:{type:'json_object'}, temperature:0.4 })
       });
-      if (!r.ok) {
-        var msg = ''; try { var je = await r.json(); msg = (je.message) || (je.error && je.error.message) || ''; } catch(e){}
-        var err = new Error('Mistral ' + r.status + ': ' + msg); err.status = r.status; throw err;
-      }
-      var j = await r.json();
-      var text = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
-      if (!text) throw new Error('Empty Mistral response');
-      try { return JSON.parse(text); }
-      catch (e) { throw new Error('Mistral returned invalid JSON: ' + text.slice(0, 200)); }
+      if(!r.ok){ var msg=''; try{var je=await r.json(); msg=(je.message)||(je.error&&je.error.message)||''}catch(e){} var err=new Error('Cohere '+r.status+': '+msg); err.status=r.status; throw err; }
+      var j=await r.json();
+      var text = j.message && j.message.content && j.message.content[0] && j.message.content[0].text;
+      if(!text) throw new Error('Empty Cohere response');
+      try{ return JSON.parse(text); }catch(e){ throw new Error('Cohere invalid JSON: '+text.slice(0,200)); }
+    }
+    async function callMistral(prompt){
+      var r=await fetch('https://api.mistral.ai/v1/chat/completions',{method:'POST',
+        headers:{'Authorization':'Bearer '+mistralKey,'Content-Type':'application/json'},
+        body:JSON.stringify({ model:MISTRAL_MODEL, messages:[
+          {role:'system',content:'You output strict JSON only. No markdown fences. No prose outside the JSON object.'},
+          {role:'user',content:prompt}
+        ], response_format:{type:'json_object'}, temperature:0.4, max_tokens:6000 })
+      });
+      if(!r.ok){ var msg=''; try{var je=await r.json(); msg=(je.message)||(je.error&&je.error.message)||''}catch(e){} var err=new Error('Mistral '+r.status+': '+msg); err.status=r.status; throw err; }
+      var j=await r.json(); var text=j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;
+      if(!text) throw new Error('Empty Mistral response');
+      try{ return JSON.parse(text); }catch(e){ throw new Error('Mistral invalid JSON: '+text.slice(0,200)); }
+    }
+    async function callGemini(prompt){
+      var url='https://generativelanguage.googleapis.com/v1beta/models/'+GEMINI_MODEL+':generateContent?key='+encodeURIComponent(geminiKey);
+      var r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ contents:[{parts:[{text:prompt}]}], generationConfig:{responseMimeType:'application/json',temperature:0.4,maxOutputTokens:8192} })
+      });
+      if(!r.ok){ var msg=''; try{msg=(await r.json()).error.message}catch(e){} var err=new Error('Gemini '+r.status+': '+msg); err.status=r.status; throw err; }
+      var j=await r.json();
+      var text=j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts&&j.candidates[0].content.parts[0]&&j.candidates[0].content.parts[0].text;
+      if(!text) throw new Error('Empty Gemini response');
+      try{ return JSON.parse(text); }catch(e){ throw new Error('Gemini invalid JSON: '+text.slice(0,200)); }
+    }
+    async function callOpenrouter(prompt){
+      var r=await fetch('https://openrouter.ai/api/v1/chat/completions',{method:'POST',
+        headers:{'Authorization':'Bearer '+openrouterKey,'Content-Type':'application/json','HTTP-Referer':'https://github.com/atomeam/HomeBase-','X-Title':'HomeBase'},
+        body:JSON.stringify({ model:OPENROUTER_MODEL, models:OPENROUTER_FALLBACKS, messages:[
+          {role:'system',content:'You output strict JSON only. No markdown fences. No prose outside the JSON object.'},
+          {role:'user',content:prompt}
+        ], temperature:0.4, max_tokens:6000 })
+      });
+      if(!r.ok){ var msg=''; try{msg=(await r.json()).error.message}catch(e){} var err=new Error('OpenRouter '+r.status+': '+msg); err.status=r.status; throw err; }
+      var j=await r.json(); var usedModel=j.model||OPENROUTER_MODEL;
+      var text=j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;
+      if(!text) throw new Error('Empty OpenRouter from '+usedModel);
+      var cleaned=text.trim().replace(/^```(?:json)?\s*/i,'').replace(/```\s*$/,'').trim();
+      try{ var parsed=JSON.parse(cleaned); parsed.__model=usedModel; return parsed; }
+      catch(e){ throw new Error('OpenRouter ('+usedModel+') invalid JSON: '+cleaned.slice(0,200)); }
+    }
+    async function callPollinations(prompt){
+      // No-key, OpenAI-compatible. https://text.pollinations.ai/openai
+      var r=await fetch('https://text.pollinations.ai/openai',{method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ model:POLLINATIONS_MODEL, messages:[
+          {role:'system',content:'You output strict JSON only. No markdown fences. No prose outside the JSON object.'},
+          {role:'user',content:prompt}
+        ], response_format:{type:'json_object'}, temperature:0.4, private:true, referrer:'homebase' })
+      });
+      if(!r.ok){ var msg=''; try{msg=(await r.text()).slice(0,200)}catch(e){} var err=new Error('Pollinations '+r.status+': '+msg); err.status=r.status; throw err; }
+      var j=await r.json(); var text=j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;
+      if(!text) throw new Error('Empty Pollinations response');
+      var cleaned=text.trim().replace(/^```(?:json)?\s*/i,'').replace(/```\s*$/,'').trim();
+      try{ return JSON.parse(cleaned); }catch(e){ throw new Error('Pollinations invalid JSON: '+cleaned.slice(0,200)); }
+    }
+    async function callGroq(prompt){
+      var r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',
+        headers:{'Authorization':'Bearer '+groqKey,'Content-Type':'application/json'},
+        body:JSON.stringify({ model:GROQ_MODEL, messages:[
+          {role:'system',content:'You output strict JSON only. No markdown fences. No prose outside the JSON object.'},
+          {role:'user',content:prompt}
+        ], response_format:{type:'json_object'}, temperature:0.4, max_tokens:1500 })
+      });
+      if(!r.ok){ var msg=''; try{msg=(await r.json()).error.message}catch(e){} var err=new Error('Groq '+r.status+': '+msg); err.status=r.status; throw err; }
+      var j=await r.json(); var text=j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;
+      if(!text) throw new Error('Empty Groq response');
+      try{ return JSON.parse(text); }catch(e){ throw new Error('Groq invalid JSON: '+text.slice(0,200)); }
     }
 
-    async function callGemini(prompt) {
-      var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':generateContent?key=' + encodeURIComponent(geminiKey);
-      var r = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json', temperature: 0.5, maxOutputTokens: 8192 }
-        })
-      });
-      if (!r.ok) {
-        var msg = ''; try { msg = (await r.json()).error.message; } catch(e){}
-        var err = new Error('Gemini ' + r.status + ': ' + msg); err.status = r.status; throw err;
-      }
-      var j = await r.json();
-      var text = j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts && j.candidates[0].content.parts[0] && j.candidates[0].content.parts[0].text;
-      if (!text) throw new Error('Empty Gemini response');
-      try { return JSON.parse(text); }
-      catch (e) { throw new Error('Gemini returned invalid JSON: ' + text.slice(0, 200)); }
-    }
-
-    async function callOpenrouter(prompt) {
-      var r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer ' + openrouterKey,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://github.com/atomeam/HomeBase-',
-          'X-Title': 'HomeBase'
-        },
-        body: JSON.stringify({
-          model: OPENROUTER_MODEL,
-          models: OPENROUTER_FALLBACKS,
-          messages: [
-            { role: 'system', content: 'You output strict JSON only. No markdown fences. No prose outside the JSON object.' },
-            { role: 'user', content: prompt }
-          ],
-          temperature: 0.5,
-          max_tokens: 4096
-        })
-      });
-      if (!r.ok) {
-        var msg = ''; try { msg = (await r.json()).error.message; } catch(e){}
-        var err = new Error('OpenRouter ' + r.status + ': ' + msg); err.status = r.status; throw err;
-      }
-      var j = await r.json();
-      var usedModel = j.model || OPENROUTER_MODEL;
-      var text = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
-      if (!text) throw new Error('Empty OpenRouter response from ' + usedModel);
-      var cleaned = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
-      try { var parsed = JSON.parse(cleaned); parsed.__model = usedModel; return parsed; }
-      catch (e) { throw new Error('OpenRouter (' + usedModel + ') returned invalid JSON: ' + cleaned.slice(0, 200)); }
-    }
-
-    async function callGroq(prompt) {
-      var r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + groqKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: GROQ_MODEL,
-          messages: [
-            { role: 'system', content: 'You output strict JSON only. No markdown fences. No prose outside the JSON object.' },
-            { role: 'user', content: prompt }
-          ],
-          response_format: { type: 'json_object' },
-          temperature: 0.5,
-          max_tokens: 1500
-        })
-      });
-      if (!r.ok) {
-        var msg = ''; try { msg = (await r.json()).error.message; } catch(e){}
-        var err = new Error('Groq ' + r.status + ': ' + msg); err.status = r.status; throw err;
-      }
-      var j = await r.json();
-      var text = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
-      if (!text) throw new Error('Empty Groq response');
-      try { return JSON.parse(text); }
-      catch (e) { throw new Error('Groq returned invalid JSON: ' + text.slice(0, 200)); }
-    }
-
-    async function callLlm(prompt) {
-      var errors = [];
-      var providers = [
-        { name: 'Mistral',    key: mistralKey,    fn: callMistral },
-        { name: 'Gemini',     key: geminiKey,     fn: callGemini },
-        { name: 'OpenRouter', key: openrouterKey, fn: callOpenrouter },
-        { name: 'Groq',       key: groqKey,       fn: callGroq }
+    async function callLlm(prompt){
+      var errors=[];
+      var providers=[
+        { name:'Cohere',       key:cohereKey,     fn:callCohere },
+        { name:'Mistral',      key:mistralKey,    fn:callMistral },
+        { name:'Gemini',       key:geminiKey,     fn:callGemini },
+        { name:'OpenRouter',   key:openrouterKey, fn:callOpenrouter },
+        { name:'Pollinations', key:'__nokey__',   fn:callPollinations },
+        { name:'Groq',         key:groqKey,       fn:callGroq }
       ];
-      for (var i = 0; i < providers.length; i++) {
-        var p = providers[i];
-        if (!p.key) continue;
-        try {
-          var proposal = await p.fn(prompt);
-          var providerLabel = p.name;
-          if (p.name === 'OpenRouter' && proposal.__model) {
-            providerLabel = 'OpenRouter:' + proposal.__model.split('/').pop().replace(':free','');
-            delete proposal.__model;
-          }
-          return { proposal: proposal, provider: providerLabel };
-        }
-        catch (e) {
-          console.warn('[homebase] ' + p.name + ' failed:', e.message);
-          errors.push(p.name + ': ' + e.message);
-        }
+      for(var i=0;i<providers.length;i++){
+        var p=providers[i]; if(!p.key) continue;
+        try{
+          var proposal=await p.fn(prompt);
+          var label=p.name;
+          if(p.name==='OpenRouter'&&proposal.__model){ label='OpenRouter:'+proposal.__model.split('/').pop().replace(':free',''); delete proposal.__model; }
+          return { proposal:proposal, provider:label };
+        }catch(e){ console.warn('[homebase] '+p.name+' failed:',e.message); errors.push(p.name+': '+e.message); }
       }
-      if (!errors.length) throw new Error('No LLM key. Add Mistral, Gemini, OpenRouter, or Groq in ⚙.');
-      throw new Error('All providers failed — ' + errors.join(' / '));
+      throw new Error('All providers failed — '+errors.join(' / '));
     }
 
-    function renderProposal(provider, proposal, patchedHtml, indexSha) {
-      pendingProposal = { provider: provider, proposal: proposal, html: patchedHtml, sha: indexSha };
-      propMeta.innerHTML = 'via <b>' + escapeHtml(provider) + '</b> · ' + proposal.patches.length + ' patch' + (proposal.patches.length===1?'':'es');
-      propSummary.textContent = proposal.summary;
-      propPatches.innerHTML = '';
-      proposal.patches.forEach(function(p, idx){
-        var div = document.createElement('div'); div.className = 'patch';
-        var head = document.createElement('div'); head.style.color = '#a1a1aa'; head.style.marginBottom = '4px';
-        head.textContent = '— patch ' + (idx+1) + ' —';
-        var del = document.createElement('div'); del.className = 'line del'; del.textContent = '- ' + truncate(p.find, 220);
-        var add = document.createElement('div'); add.className = 'line add'; add.textContent = '+ ' + truncate(p.replace, 220);
-        div.appendChild(head); div.appendChild(del); div.appendChild(add);
-        propPatches.appendChild(div);
+    function renderProposal(provider, proposal, patchedHtml, indexSha, issues){
+      pendingProposal = { provider:provider, proposal:proposal, html:patchedHtml, sha:indexSha };
+      propMeta.innerHTML='via <b>'+escapeHtml(provider)+'</b> · '+proposal.patches.length+' patch'+(proposal.patches.length===1?'':'es');
+      if(issues.length===0){ propValidate.className='prop-validate ok'; propValidate.textContent='✓ html ok · js parses · critical fns preserved · size sane'; }
+      else{ propValidate.className='prop-validate bad'; propValidate.textContent='⚠ '+issues.length+' issue'+(issues.length===1?'':'s')+': '+issues.join(' · '); }
+      propSummary.textContent = proposal.summary + (proposal.reasoning?'\n\n— '+proposal.reasoning:'');
+      propPatches.innerHTML='';
+      proposal.patches.forEach(function(p,idx){
+        var div=document.createElement('div'); div.className='patch';
+        var head=document.createElement('div'); head.style.color='#a1a1aa'; head.style.marginBottom='4px'; head.textContent='— patch '+(idx+1)+' —';
+        var del=document.createElement('div'); del.className='line del'; del.textContent='- '+truncate(p.find,240);
+        var add=document.createElement('div'); add.className='line add'; add.textContent='+ '+truncate(p.replace,240);
+        div.appendChild(head); div.appendChild(del); div.appendChild(add); propPatches.appendChild(div);
       });
-      propApplyBtn.disabled = false;
-      propSkipBtn.disabled = false;
-      propApplyBtn.textContent = 'Apply & reload';
-      propModalBg.hidden = false;
+      propApplyBtn.disabled=false; propSkipBtn.disabled=false;
+      propApplyBtn.textContent = issues.length ? 'Apply anyway' : 'Apply & reload';
+      propModalBg.hidden=false;
     }
-    function truncate(s, n) { s = String(s); return s.length > n ? s.slice(0, n) + '…' : s; }
-    function closeProposal() { propModalBg.hidden = true; pendingProposal = null; }
-    propSkipBtn.addEventListener('click', function(){
-      showBanner('warn', 'Proposal skipped.', 2500);
-      closeProposal();
-    });
-    propApplyBtn.addEventListener('click', async function(){
-      if (!pendingProposal) return;
-      propApplyBtn.disabled = true; propSkipBtn.disabled = true;
-      propApplyBtn.textContent = 'Committing…';
-      try {
-        var pp = pendingProposal;
-        var commitMsg = 'apply: ' + shortenForCommit(pp.proposal.summary);
-        var putR = await fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + INDEX_PATH, {
-          method: 'PUT',
-          headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: commitMsg,
-            content: b64encode(pp.html),
-            sha: pp.sha,
-            branch: BRANCH
-          })
+    function truncate(s,n){ s=String(s); return s.length>n?s.slice(0,n)+'…':s; }
+    function closeProposal(){ propModalBg.hidden=true; pendingProposal=null; }
+    propSkipBtn.addEventListener('click',function(){ showBanner('warn','Proposal skipped.',2500); closeProposal(); });
+    propApplyBtn.addEventListener('click',async function(){
+      if(!pendingProposal) return;
+      propApplyBtn.disabled=true; propSkipBtn.disabled=true; propApplyBtn.textContent='Committing…';
+      try{
+        var pp=pendingProposal;
+        var commitMsg='apply: '+shortenForCommit(pp.proposal.summary);
+        var putR=await fetch('https://api.github.com/repos/'+REPO_OWNER+'/'+REPO_NAME+'/contents/'+INDEX_PATH,{method:'PUT',
+          headers:{'Authorization':'token '+token,'Accept':'application/vnd.github+json','Content-Type':'application/json'},
+          body:JSON.stringify({message:commitMsg,content:b64encode(pp.html),sha:pp.sha,branch:BRANCH})
         });
-        if (!putR.ok) {
-          var txt = ''; try { txt = (await putR.json()).message || ''; } catch(e){}
-          throw new Error('Commit failed ' + putR.status + ': ' + txt);
-        }
-        var jr = await putR.json();
-        var newSha = jr.commit && jr.commit.sha ? jr.commit.sha.slice(0,8) : '';
-        propApplyBtn.textContent = 'Reloading…';
-        showBanner('success', '✓ Applied. Reloading…', 2000);
-        setTimeout(function(){
-          var sep = location.search ? '&' : '?';
-          var bust = 'v=' + (newSha || Date.now());
-          var clean = location.search.replace(/[?&]v=[^&]*/g, '');
-          location.search = clean + (clean ? '&' : '?') + bust;
-        }, 700);
-      } catch (e) {
-        console.error('[homebase] apply failed:', e);
-        showBanner('error', 'APPLY FAILED — ' + escapeHtml(e.message));
-        propApplyBtn.disabled = false; propSkipBtn.disabled = false;
-        propApplyBtn.textContent = 'Retry apply';
-      }
+        if(!putR.ok){ var txt=''; try{txt=(await putR.json()).message||''}catch(e){} throw new Error('Commit failed '+putR.status+': '+txt); }
+        var jr=await putR.json(); var newSha=jr.commit&&jr.commit.sha?jr.commit.sha.slice(0,8):'';
+        propApplyBtn.textContent='Reloading…'; showBanner('success','✓ Applied. Reloading…',2000);
+        setTimeout(function(){ var clean=location.search.replace(/[?&]v=[^&]*/g,''); location.search=clean+(clean?'&':'?')+'v='+(newSha||Date.now()); },700);
+      }catch(e){ console.error('[homebase] apply failed:',e);
+        showBanner('error','APPLY FAILED — '+escapeHtml(e.message));
+        propApplyBtn.disabled=false; propSkipBtn.disabled=false; propApplyBtn.textContent='Retry apply'; }
     });
 
-    async function proposeChange() {
-      if (!token) { showBanner('warn', 'Set GitHub token first (⚙).', 4000); return; }
-      if (!mistralKey && !geminiKey && !openrouterKey && !groqKey) { showBanner('warn', 'Need a Mistral, Gemini, OpenRouter, or Groq key (⚙).', 5000); return; }
-      proposeBtn.disabled = true;
-      try {
-        showBanner('warn', 'Reading log + commits + current code…');
-        var logFile = await ghGetFile(LOG_PATH);
-        var lines = logFile.content.trim().split('\n').filter(Boolean);
-        var notes = [];
-        for (var i = Math.max(0, lines.length - 50); i < lines.length; i++) {
-          try { var e = JSON.parse(lines[i]); if (e && e.note) notes.push(e.note); } catch (er) {}
+    async function proposeChange(){
+      if(!token){ showBanner('warn','Set GitHub token first (⚙).',4000); return; }
+      proposeBtn.disabled=true;
+      try{
+        showBanner('warn','Reading log + commits + current code…');
+        var logFile=await ghGetFile(LOG_PATH);
+        var lines=logFile.content.trim().split('\n').filter(Boolean);
+        var notes=[];
+        for(var i=Math.max(0,lines.length-50);i<lines.length;i++){
+          try{ var e=JSON.parse(lines[i]); if(e&&e.note) notes.push(e.note); }catch(er){}
         }
-        var commits = await ghGetCommits(25);
-        var indexFile = await ghGetFile(INDEX_PATH);
-        if (!indexFile.content) throw new Error('Could not load mini/index.html');
-
-        var split = splitStyle(indexFile.content);
-        var available = [mistralKey && 'Mistral', geminiKey && 'Gemini', openrouterKey && 'OpenRouter', groqKey && 'Groq'].filter(Boolean).join('→');
-        showBanner('warn', 'Asking ' + available + ' (~' + Math.round(split.working.length/1024) + 'KB code, ' + notes.length + ' notes, ' + commits.length + ' commits)…');
-        var prompt = buildPrompt(notes, commits, split.working);
-        var result = await callLlm(prompt);
-        var proposal = result.proposal;
-        if (!proposal.summary || !Array.isArray(proposal.patches)) throw new Error('Proposal missing summary or patches');
-
-        var patchedSlim = applyPatches(split.working, proposal.patches);
-        if (patchedSlim === split.working) throw new Error('Patches resulted in no change');
-        var newHtml = restoreStyle(patchedSlim, split);
-        if (newHtml.length < 1000) throw new Error('Result suspiciously short');
-
+        var commits=await ghGetCommits(25);
+        var indexFile=await ghGetFile(INDEX_PATH);
+        if(!indexFile.content) throw new Error('Could not load mini/index.html');
+        var available=[cohereKey&&'Cohere', mistralKey&&'Mistral', geminiKey&&'Gemini', openrouterKey&&'OpenRouter', 'Pollinations', groqKey&&'Groq'].filter(Boolean).join('→');
+        showBanner('warn','Asking '+available+' (~'+Math.round(indexFile.content.length/1024)+'KB code, '+notes.length+' notes, '+commits.length+' commits)…');
+        var prompt=buildPrompt(notes, commits, indexFile.content);
+        var result=await callLlm(prompt);
+        var proposal=result.proposal;
+        if(!proposal.summary||!Array.isArray(proposal.patches)) throw new Error('Proposal missing summary or patches');
+        var newHtml=applyPatches(indexFile.content, proposal.patches);
+        if(newHtml===indexFile.content) throw new Error('Patches resulted in no change');
+        var issues=validatePatched(newHtml, indexFile.content);
         hideBanner();
-        renderProposal(result.provider, proposal, newHtml, indexFile.sha);
-      } catch (e) {
-        console.error('[homebase] propose failed:', e);
-        showBanner('error', 'PROPOSE FAILED — ' + escapeHtml(e.message));
-      } finally {
-        proposeBtn.disabled = false;
-      }
+        renderProposal(result.provider, proposal, newHtml, indexFile.sha, issues);
+      }catch(e){ console.error('[homebase] propose failed:',e); showBanner('error','PROPOSE FAILED — '+escapeHtml(e.message)); }
+      finally{ proposeBtn.disabled=false; }
     }
-    proposeBtn.addEventListener('click', proposeChange);
+    proposeBtn.addEventListener('click',proposeChange);
 
-    setStatus(token ? (queue.length ? 'pending' : 'ok') : 'idle');
+    setStatus(token?(queue.length?'pending':'ok'):'idle');
     armIdle();
-    if (token && queue.length) drain();
-    if (!token) showBanner('warn', 'No GitHub token. Click ⚙ to set up.', 6000);
+    if(token&&queue.length) drain();
+    if(!token) showBanner('warn','No GitHub token. Click ⚙ to set up.',6000);
   </script>
 </body>
 </html>

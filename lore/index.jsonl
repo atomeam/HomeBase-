@@ -1,0 +1,4 @@
+{"id":"lore-001","title":"Architecture Overview","tags":["system","topology"],"summary":"HomeBase routes all requests through Loxa router","sourceUrl":""}
+{"id":"lore-002","title":"Telemetry Stack","tags":["observability","metrics"],"summary":"Deep probes, incidents, correlation, CSV export","sourceUrl":""}
+{"id":"lore-003","title":"Routing Decisions","tags":["loxa","security"],"summary":"telemetry=allow, kraken=deny, lore=allow, unknown=needs_human","sourceUrl":""}
+{"id":"lore-004","title":"Default-Deny Policy","tags":["security","guardrails"],"summary":"Kraken routes locked until explicitly approved","sourceUrl":""}
