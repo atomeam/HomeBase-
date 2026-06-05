@@ -641,7 +641,87 @@ app.get('/api/lore/entry/:id', (req, res) => {
   res.json({ ok: true, entry, traceId });
 });
 
-// ════════════════════════════════════════════════════════════════════
+// KRAKEN EXECUTION ENGINE (v0)
+// Default-deny, require operator confirm, rate limited
+
+const KRAKEN_RATE_LIMIT = 10;
+const KRAKEN_RATE_WINDOW = 60000;
+const KRAKEN_TIMEOUT_MS = 5000;
+let rateLimitBuckets = new Map();
+
+const { getActions, getAction, hashParams } = require('./lib/kraken/registry');
+const { scanForSecrets, validateParams } = require('./lib/kraken/validate');
+
+function checkRateLimit(traceId) {
+  const now = Date.now();
+  const key = traceId.slice(-8);
+  const last = rateLimitBuckets.get(key) || 0;
+  if (now - last < KRAKEN_RATE_WINDOW) return false;
+  rateLimitBuckets.set(key, now);
+  for (const [k, v] of rateLimitBuckets) {
+    if (now - v > KRAKEN_RATE_WINDOW) rateLimitBuckets.delete(k);
+  }
+  return true;
+}
+
+app.get('/api/kraken/actions', (req, res) => {
+  res.json({ ok: true, actions: getActions(), count: getActions().length });
+});
+
+app.post('/api/kraken/execute', async (req, res) => {
+  const startTime = Date.now();
+  const traceId = req.headers['x-trace-id'] || `trace_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+  const confirm = req.headers['x-operator-confirm'];
+  
+  if (confirm !== 'yes') {
+    console.log(`[kraken] denied: traceId=${traceId} reason=operator_confirm_missing`);
+    return res.status(403).json({ ok: false, traceId, decision: 'denied', reason: 'operator_confirm_missing' });
+  }
+  
+  if (!checkRateLimit(traceId)) {
+    console.log(`[kraken] denied: traceId=${traceId} reason=rate_limited`);
+    return res.status(429).json({ ok: false, traceId, decision: 'denied', reason: 'rate_limited' });
+  }
+  
+  const { action, params = {} } = req.body;
+  const actionDef = getAction(action);
+  
+  if (!actionDef) {
+    console.log(`[kraken] denied: traceId=${traceId} action=${action} reason=action_not_allowlisted`);
+    return res.status(403).json({ ok: false, traceId, action, decision: 'denied', reason: 'action_not_allowlisted' });
+  }
+  
+  if (scanForSecrets(params)) {
+    console.log(`[kraken] denied: traceId=${traceId} action=${action} reason=secret_in_params`);
+    return res.status(403).json({ ok: false, traceId, action, decision: 'denied', reason: 'secret_in_params' });
+  }
+  
+  const errors = validateParams(params, actionDef.paramSchema);
+  if (errors.length > 0) {
+    console.log(`[kraken] denied: traceId=${traceId} action=${action} reason=invalid_params`);
+    return res.status(400).json({ ok: false, traceId, action, decision: 'denied', reason: 'invalid_params', errors });
+  }
+  
+  console.log(`[kraken_pre] traceId=${traceId} action=${action} paramsHash=${hashParams(params)}`);
+  
+  let result;
+  try {
+    result = await Promise.race([
+      actionDef.handler(params, { traceId }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), KRAKEN_TIMEOUT_MS))
+    ]);
+  } catch (err) {
+    console.log(`[kraken] error: traceId=${traceId} action=${action} error=${err.message}`);
+    return res.status(500).json({ ok: false, traceId, action, decision: 'denied', reason: 'action_timeout' });
+  }
+  
+  const durationMs = Date.now() - startTime;
+  console.log(`[kraken_post] traceId=${traceId} action=${action} ok=true durationMs=${durationMs}`);
+  
+  res.json({ ok: true, traceId, action, decision: 'executed', result, durationMs });
+});
+
+// KRAKEN_END
 
 app.get('/api/health', (_req, res) => {
   res.json({
