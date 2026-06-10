@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HomeBase</title>
+<link rel="icon" type="image/svg+xml" href="icon.svg" />
+<link rel="apple-touch-icon" href="icon.svg" />
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="theme-color" content="#0a0a0a" />
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: #050505; color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    display: flex; flex-direction: column;
+    overflow: hidden; user-select: none;
+  }
+  .bg { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+  .bg .blob1 { position: absolute; top: -10%; left: -10%; width: 500px; height: 500px;
+    background: rgba(30,58,138,0.10); border-radius: 50%; filter: blur(120px); }
+  .bg .blob2 { position: absolute; bottom: -10%; right: -10%; width: 500px; height: 500px;
+    background: rgba(39,39,42,0.10); border-radius: 50%; filter: blur(120px); }
+  .bg .grid { position: absolute; inset: 0; opacity: 0.03;
+    background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 32px 32px; }
+  main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    position: relative; z-index: 10; padding: 0 2rem; }
+  .header { margin-bottom: 4rem; text-align: center; }
+  .header p { font-size: 10px; text-transform: uppercase; letter-spacing: 0.6em; color: #71717a;
+    font-weight: 500; margin-bottom: 0.75rem; }
+  .header .line { height: 1px; width: 192px; margin: 0 auto;
+    background: linear-gradient(to right, transparent, #3f3f46, transparent); }
+  .btn-wrap { position: relative; }
+  .btn-glow { position: absolute; inset: 0; background: rgba(255,255,255,0.05);
+    border-radius: 1rem; filter: blur(16px); transition: background 0.5s; }
+  .btn-wrap:hover .btn-glow { background: rgba(255,255,255,0.10); }
+  button.homebase { position: relative; width: 16rem; height: 6rem;
+    background: #18181b; border: 1px solid #3f3f46; border-radius: 0.75rem;
+    color: #f4f4f5; font-size: 1.5rem; font-weight: 700;
+    letter-spacing: 0.25em; text-transform: uppercase; cursor: pointer;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+    transition: transform 0.15s, color 0.2s; overflow: hidden; }
+  button.homebase:hover { color: #fff; transform: scale(1.02); }
+  button.homebase:active { transform: scale(0.95); }
+  button.homebase .bevel { position: absolute; inset: 1px;
+    border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; pointer-events: none; }
+  button.homebase .pip { position: absolute; width: 4px; height: 4px; background: #3f3f46; }
+  button.homebase .pip.tl { top: 8px; left: 8px; }
+  button.homebase .pip.tr { top: 8px; right: 8px; }
+  button.homebase .pip.bl { bottom: 8px; left: 8px; }
+  button.homebase .pip.br { bottom: 8px; right: 8px; }
+  .descriptor { margin-top: 3rem; text-align: center; font-style: italic;
+    font-family: Georgia, serif; font-size: 11px; color: #52525b; letter-spacing: 0.15em; }
+  footer { height: 3rem; background: #0a0a0a; border-top: 1px solid #27272a;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2.5rem; position: relative; z-index: 20; }
+  .left { display: flex; align-items: center; gap: 0.75rem; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e;
+    box-shadow: 0 0 8px rgba(34,197,94,0.6); animation: pulse 2s infinite; }
+  @keyframes pulse { 50% { opacity: 0.5; } }
+  .label-text { font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px; font-weight: 600; color: #a1a1aa; letter-spacing: 0.1em;
+    text-transform: uppercase; white-space: nowrap; }
+  .label-text .dim { color: #71717a; font-weight: 400; }
+  .right { display: flex; align-items: center; gap: 1rem; cursor: pointer; }
+  .divider { height: 1rem; width: 1px; background: #27272a; }
+  #counter { font-weight: 700; display: inline-block; min-width: 2ch;
+    transition: transform 0.25s, color 0.25s; }
+  #counter.bump { transform: scale(1.5); color: #86efac; }
+  button.homebase.idle { animation: idlePulse 2s ease-in-out infinite; }
+  @keyframes idlePulse { 0%,100%{opacity:1;} 50%{opacity:0.85;} }
+</style>
+</head>
+<body>
+  <div class="bg"><div class="blob1"></div><div class="blob2"></div><div class="grid"></div></div>
+  <main>
+    <div class="header">
+      <p>Primary Command Interface</p>
+      <div class="line"></div>
+    </div>
+    <div class="btn-wrap">
+      <div class="btn-glow"></div>
+      <button class="homebase" id="homebase-button" aria-label="Homebase">
+        <span class="bevel"></span>
+        Homebase
+        <span class="pip tl"></span><span class="pip tr"></span>
+        <span class="pip bl"></span><span class="pip br"></span>
+      </button>
+    </div>
+    <div class="descriptor">Bridge Connection: Active</div>
+  </main>
+  <footer>
+    <div class="left">
+      <div class="dot"></div>
+      <span class="label-text">Homebase <span class="dim">v0.1.0</span></span>
+    </div>
+    <div class="right" id="right" title="Double-click to reset">
+      <div class="divider"></div>
+      <span class="label-text">clicks: <span id="counter">0</span></span>
+    </div>
+  </footer>
+  <script>
+    var STORAGE_KEY = 'homebase:clicks';
+    var IDLE_DELAY_MS = 10000;
+    var btn = document.getElementById('homebase-button');
+    var counter = document.getElementById('counter');
+    var right = document.getElementById('right');
+    var idleTimer = null;
+    var raw = localStorage.getItem(STORAGE_KEY);
+    var clicks = raw ? Number(raw) : 0;
+    if (!isFinite(clicks)) clicks = 0;
+    counter.textContent = clicks;
+    function armIdle(){ btn.classList.remove('idle'); if (idleTimer) clearTimeout(idleTimer);
+      idleTimer = setTimeout(function(){ btn.classList.add('idle'); }, IDLE_DELAY_MS); }
+    function persist(){ localStorage.setItem(STORAGE_KEY, String(clicks)); }
+    function bump(){ counter.textContent = clicks; counter.classList.remove('bump');
+      void counter.offsetWidth; counter.classList.add('bump');
+      setTimeout(function(){ counter.classList.remove('bump'); }, 250); }
+    btn.addEventListener('click', function(){ clicks++; persist(); bump(); armIdle(); });
+    right.addEventListener('dblclick', function(){ clicks = 0; persist(); bump(); armIdle(); });
+    document.addEventListener('keydown', function(e){
+      if (e.code !== 'Space' && e.key !== ' ') return;
+      var t = e.target; var tag = t && t.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (t && t.isContentEditable)) return;
+      e.preventDefault(); btn.click();
+    });
+    armIdle();
+  </script>
+</body>
+</html>
