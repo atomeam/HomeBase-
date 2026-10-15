@@ -16,6 +16,7 @@ import express from 'express';
 import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { createHash, timingSafeEqual } from 'node:crypto';
 import { GoogleGenAI } from '@google/genai';
 import { runAlphaLoop } from './src/alpha/orchestrator.js';
 
@@ -642,7 +643,10 @@ app.get('/api/lore/entry/:id', (req, res) => {
 });
 
 // KRAKEN EXECUTION ENGINE (v0)
-// Default-deny, require operator confirm, rate limited
+// Default-deny, require operator token + confirm, rate limited
+//
+// Callers must send `Authorization: Bearer <HOMEBASE_KRAKEN_TOKEN>`.
+// When HOMEBASE_KRAKEN_TOKEN is unset or empty, every execute is refused.
 
 const KRAKEN_RATE_LIMIT = 10;
 const KRAKEN_RATE_WINDOW = 60000;
@@ -651,6 +655,17 @@ let rateLimitBuckets = new Map();
 
 const { getActions, getAction, hashParams } = require('./lib/kraken/registry');
 const { scanForSecrets, validateParams } = require('./lib/kraken/validate');
+
+function krakenTokenOk(authHeader) {
+  const expected = process.env.HOMEBASE_KRAKEN_TOKEN || '';
+  if (!expected) return { ok: false, reason: 'kraken_token_unset' };
+  const match = /^Bearer\s+(.+)$/i.exec(typeof authHeader === 'string' ? authHeader : '');
+  if (!match) return { ok: false, reason: 'operator_token_invalid' };
+  // Hash both sides so timingSafeEqual gets equal lengths and leaks no length info.
+  const given = createHash('sha256').update(match[1].trim()).digest();
+  const want = createHash('sha256').update(expected).digest();
+  return timingSafeEqual(given, want) ? { ok: true } : { ok: false, reason: 'operator_token_invalid' };
+}
 
 function checkRateLimit(traceId) {
   const now = Date.now();
@@ -672,6 +687,13 @@ app.post('/api/kraken/execute', async (req, res) => {
   const startTime = Date.now();
   const traceId = req.headers['x-trace-id'] || `trace_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
   const confirm = req.headers['x-operator-confirm'];
+  
+  const auth = krakenTokenOk(req.headers['authorization']);
+  if (!auth.ok) {
+    console.log(`[kraken] denied: traceId=${traceId} reason=${auth.reason}`);
+    const status = auth.reason === 'kraken_token_unset' ? 503 : 401;
+    return res.status(status).json({ ok: false, traceId, decision: 'denied', reason: auth.reason });
+  }
   
   if (confirm !== 'yes') {
     console.log(`[kraken] denied: traceId=${traceId} reason=operator_confirm_missing`);
