@@ -280,7 +280,9 @@ GET /api/lore/entry/lore-001
 
 ## Kraken Execution Engine (v0)
 
-Default-deny, require operator confirm, rate limited.
+Default-deny, require operator token + confirm, rate limited.
+
+**Required env var:** `HOMEBASE_KRAKEN_TOKEN` — a long random secret (for example `openssl rand -hex 32`), set on the server only (`.env.local`, Cloud Run secret). Callers send it as `Authorization: Bearer <token>`; it is compared in constant time. When it is unset or empty, every execute is refused with `503 kraken_token_unset` (fails closed). Never put it in client code.
 
 ### GET /api/kraken/actions
 
@@ -289,6 +291,7 @@ Returns allowlist with schemas.
 ### POST /api/kraken/execute
 
 **Headers required:**
+- `Authorization: Bearer <HOMEBASE_KRAKEN_TOKEN>` (else 401; 503 if the server has no token set)
 - `X-Operator-Confirm: yes` (else 403)
 - `X-Trace-Id: <uuid>` (optional)
 

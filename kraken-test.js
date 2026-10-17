@@ -1,26 +1,37 @@
 // Kraken Test Harness
 
 const KRAKEN_URL = process.env.HOMEBASE_URL || 'http://localhost:3000';
+const AUTH = { Authorization: `Bearer ${process.env.HOMEBASE_KRAKEN_TOKEN || ''}` };
 
 const tests = [
   {
+    name: 'missing_token',
+    opts: { method: 'POST', body: { action: 'echo', params: { message: 'test' } }, headers: { 'X-Operator-Confirm': 'yes' } },
+    expectStatus: 401
+  },
+  {
+    name: 'wrong_token',
+    opts: { method: 'POST', body: { action: 'echo', params: { message: 'test' } }, headers: { 'X-Operator-Confirm': 'yes', Authorization: 'Bearer wrong' } },
+    expectStatus: 401
+  },
+  {
     name: 'missing_confirm',
-    opts: { method: 'POST', body: { action: 'echo', params: { message: 'test' } } },
+    opts: { method: 'POST', body: { action: 'echo', params: { message: 'test' } }, headers: { ...AUTH } },
     expectStatus: 403
   },
   {
     name: 'wrong_confirm',
-    opts: { method: 'POST', body: { action: 'echo', params: { message: 'test' } }, headers: { 'X-Operator-Confirm': 'no' } },
+    opts: { method: 'POST', body: { action: 'echo', params: { message: 'test' } }, headers: { ...AUTH, 'X-Operator-Confirm': 'no' } },
     expectStatus: 403
   },
   {
     name: 'unknown_action',
-    opts: { method: 'POST', body: { action: 'fake', params: {} }, headers: { 'X-Operator-Confirm': 'yes' } },
+    opts: { method: 'POST', body: { action: 'fake', params: {} }, headers: { ...AUTH, 'X-Operator-Confirm': 'yes' } },
     expectStatus: 403
   },
   {
     name: 'echo_success',
-    opts: { method: 'POST', body: { action: 'echo', params: { message: 'hello' } }, headers: { 'X-Operator-Confirm': 'yes' } },
+    opts: { method: 'POST', body: { action: 'echo', params: { message: 'hello' } }, headers: { ...AUTH, 'X-Operator-Confirm': 'yes' } },
     expectStatus: 200
   },
 ];
