@@ -108,6 +108,8 @@
   <main>
     <div class="header"><p>Primary Command Interface</p><div class="line"></div></div>
     <div class="intent-wrap">
+      <input id="intent" type="text" maxlength="240" autocomplete="off" spellcheck="true" class="intent-focused"
+             placeholder="why are you summoning me?" aria-label="intent" />
       <input id="intent" type="text" maxlength="240" autocomplete="off" spellcheck="true" placeholder="why are you summoning me?" aria-label="intent" />
       <span class="hint">optional · enter or click to send</span>
     </div>
@@ -280,6 +282,138 @@
         catch(e){ console.error('[homebase] write failed:',e); setStatus('error',e.message);
           showBanner('error','WRITE FAILED — '+escapeHtml(e.message)); draining=false; setTimeout(drain,5000); return; }
       }
+      var j = await r.json();
+      return { sha: j.sha, content: b64decode(j.content || '') };
+    }
+
+    async function ghGetCommits(limit) {
+      limit = limit || 25;
+      var url = 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME +
+                '/commits?sha=' + BRANCH + '&per_page=' + limit + '&t=' + Date.now();
+      var r = await fetch(url, {
+        headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github+json' },
+        cache: 'no-store'
+      });
+      if (!r.ok) return [];
+      var j = await r.json();
+      return j.map(function(c){
+        var msg = (c.commit && c.commit.message) || '';
+        return msg.split('\n')[0];
+      });
+    }
+
+    async function ghPutFile(content, sha, commitMessage, branchName) {
+      var url = 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + LOG_PATH;
+      var body = {
+        message: commitMessage || ('log: ' + new Date().toISOString()),
+        content: b64encode(content),
+        branch: branchName || BRANCH
+      };
+      if (sha) body.sha = sha;
+      var r = await fetch(url, {
+        method: 'PUT',
+        headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (!r.ok) {
+        var txt = ''; try { txt = (await r.json()).message || ''; } catch(e){}
+        var err = new Error('PUT ' + r.status + (txt ? ': ' + txt : ''));
+        err.status = r.status; throw err;
+      }
+      var j = await r.json();
+      return j.content && j.content.sha;
+    }
+
+    function shortenForCommit(note) {
+      var s = note.replace(/\s+/g, ' ').trim();
+      if (s.length > 64) s = s.slice(0, 61) + '…';
+      return s;
+    }
+
+    async function writeOne(entry) {
+      if (!cache) cache = await ghGetFile(LOG_PATH);
+      var line = JSON.stringify(entry);
+      var sep = (cache.content && !cache.content.endsWith('\n')) ? '\n' : '';
+      var newContent = cache.content + sep + line + '\n';
+      var msg = entry.note ? 'log: ' + shortenForCommit(entry.note) : 'log: ' + entry.ts;
+      try {
+        var newSha = await ghPutFile(newContent, cache.sha, msg);
+        cache = { sha: newSha, content: newContent };
+      } catch (e) {
+        if (e.status === 409 || e.status === 422) {
+          cache = await ghGetFile(LOG_PATH);
+          var sep2 = (cache.content && !cache.content.endsWith('\n')) ? '\n' : '';
+          var newContent2 = cache.content + sep2 + line + '\n';
+          var newSha2 = await ghPutFile(newContent2, cache.sha, msg);
+          cache = { sha: newSha2, content: newContent2 };
+        } else { throw e; }
+      }
+    }
+
+    async function drain() {
+      if (draining) return;
+      if (!token) { setStatus('idle'); return; }
+      if (!queue.length) { setStatus('ok'); return; }
+      draining = true;
+      setStatus('pending');
+      while (queue.length) {
+        var entry = queue[0];
+        try {
+          await writeOne(entry);
+          queue.shift(); saveQueue(); setStatus('pending');
+        } catch (e) {
+          console.error('[homebase] write failed:', e);
+          setStatus('error', e.message);
+          showBanner('error', 'WRITE FAILED — ' + escapeHtml(e.message));
+          draining = false; setTimeout(drain, 5000); return;
+        }
+      }
+      setStatus('ok'); draining = false;
+    }
+
+    function logClick(note) {
+      var entry = { ts: new Date().toISOString(), clicks: clicks };
+      if (note) entry.note = note;
+      queue.push(entry); saveQueue(); drain();
+    }
+
+    function bump(){
+      counter.classList.remove('bump'); void counter.offsetWidth;
+      counter.classList.add('bump');
+      setTimeout(function(){ counter.classList.remove('bump'); }, 250);
+    }
+
+    var idleTimer = null;
+    function armIdle(){ btn.classList.remove('idle'); if (idleTimer) clearTimeout(idleTimer);
+      idleTimer = setTimeout(function(){ btn.classList.add('idle'); }, 10000); }
+
+    function press() {
+      clicks++; localStorage.setItem(KEY_CLICKS, String(clicks));
+      counter.textContent = clicks; bump(); armIdle();
+      var note = intent.value.trim();
+      if (note) intent.value = '';
+      if (!token) {
+        showBanner('warn', 'NOT LOGGING — click the ⚙ in the footer to paste a GitHub token.', 4000);
+        return;
+      }
+      logClick(note || undefined);
+    }
+
+    btn.addEventListener('click', press);
+    clicksLabel.addEventListener('dblclick', function(){
+      clicks = 0; localStorage.setItem(KEY_CLICKS, '0');
+      counter.textContent = 0; bump();
+    });
+    intent.addEventListener('focus', function(){ this.classList.add('focused'); });
+    intent.addEventListener('blur', function(){ this.classList.remove('focused'); });
+    intent.addEventListener('keydown', function(e){
+      if (e.key === 'Enter') { e.preventDefault(); press(); }
+      else if (e.key === 'Escape') { intent.value = ''; intent.blur(); }
+    });
+    document.addEventListener('keydown', function(e){
+      if (e.code !== 'Space' && e.key !== ' ') return;
+      var t = e.target; var tag = t && t.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'BUTTON' || (t && t.isContentEditable)) return;
       setStatus('ok'); draining=false;
     }
     var lastNote=null;
